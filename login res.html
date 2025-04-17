@@ -5,6 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tela de Login</title>
     <style>
+        /* Barra superior */
+        .top-bar {
+            background-color: #042142;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        /* Barra inferior */
+        .bottom-bar {
+            background-color: #042142;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -12,12 +35,13 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            background-color: #f0f2f5;
+            background-color: #153c6a;
             padding: 20px;
+
         }
 
         .login-container {
-            background-color: white;
+            background-color: #2475ac;
             padding: 40px;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -28,7 +52,7 @@
 
         h2 {
             text-align: center;
-            color: #1c1e21;
+            color: #247;
             margin-bottom: 24px;
             font-size: 2rem;
         }
@@ -55,7 +79,7 @@
         button {
             width: 100%;
             padding: 12px;
-            background-color: #39a06e;
+            background-color: #733e85;
             color: white;
             border: none;
             border-radius: 6px;
@@ -66,16 +90,16 @@
         }
 
         button:hover {
-            background-color: #608d14;
+            background-color: #e977f5;
         }
 
         .signup-button {
-            background-color: #a6650b;
+            background-color: #153c6a;
             margin-top: 20px;
         }
 
         .signup-button:hover {
-            background-color: #eab50e;
+            background-color: #3de0fc;
         }
 
         .forgot-password {
@@ -84,7 +108,7 @@
         }
 
         .forgot-password a {
-            color: #1877f2;
+            color: white;
             text-decoration: none;
             font-size: 14px;
         }
@@ -152,6 +176,16 @@
     </style>
 </head>
 <body>
+    <body>
+    <!-- Barra superior -->
+    <header class="top-bar">
+        Mapeamento dos Problemas Urbano da Cidade de Osasco-SP
+    </header>
+     <!-- Barra inferior -->
+    <footer class="bottom-bar">
+        imagens
+    </footer>
+
     <div class="login-container">
         <h2>Login</h2>
         <form id="loginForm" onsubmit="return handleLogin(event)">
@@ -165,7 +199,7 @@
             <div class="forgot-password">
                 <a href="#">Esqueceu a senha?</a>
             </div>
-            <button type="button" class="signup-button" onclick="handleSignup()">Criar nova conta</button>
+            <button type="button" class="signup-button" onclick="redirectToSignup()">Criar nova conta</button>
         </form>
     </div>
 
@@ -181,6 +215,11 @@
 
         function handleSignup() {
             alert('Redirecionando para cadastro...');
+
+        }
+        function redirectToSignup() {
+            // Redireciona para a página de cadastro
+            window.location.href = 'cadastro.html'; // Altere para o nome da sua página de cadastro
         }
     </script>
 </body>
