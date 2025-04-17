@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro</title>
+    <style>
+      
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        /* Barra superior */
+        .top-bar {
+            background-color: #042142;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        /* Barra inferior */
+        .bottom-bar {
+            background-color: #042142;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #153c6a;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #2475ac;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            min-height: 45px;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .cpf-tel {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .cpf-tel > div {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #733e85;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        button:hover {
+            background-color: #e977f5;
+        }
+
+        /* Media Queries para Responsividade */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px auto;
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 20px;
+            }
+
+            .cpf-tel {
+                gap: 10px;
+                flex-direction: column;
+            }
+
+            .cpf-tel > div {
+                width: 100%;
+                min-width: unset;
+            }
+
+            input, textarea, button {
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+
+            .container {
+                border-radius: 5px;
+            }
+
+            h1 {
+                font-size: 1.3em;
+            }
+
+            label {
+                font-size: 0.85em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra superior -->
+    <header class="top-bar">
+        Mapeamento dos Problemas Urbano da Cidade de Osasco-SP
+    </header>
+     <!-- Barra inferior -->
+    <footer class="bottom-bar">
+        imagens
+    </footer>
+
+    <div class="container">
+        <h1>Cadastro</h1>
+        <form id="cadastroForm" onsubmit="return validarForm()">
+            <div class="form-group">
+                <label for="nome">Nome Completo:</label>
+                <input type="text" id="nome" name="nome" required 
+                       placeholder="Digite seu nome completo">
+            </div>
+
+            <div class="cpf-tel">
+                <div class="form-group">
+                    <label for="cpf">CPF:</label>
+                    <input type="text" id="cpf" name="cpf" required 
+                           pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
+                           placeholder="000.000.000-00">
+                </div>
+
+                <div class="form-group">
+                    <label for="telefone">Telefone:</label>
+                    <input type="tel" id="telefone" name="telefone" required 
+                           pattern="\(?\d{2}\)?\s?\d{4,5}-?\d{4}"
+                           placeholder="(00) 00000-0000">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="endereco">Endereço Completo:</label>
+                <textarea id="endereco" name="endereco" rows="4" required 
+                          placeholder="Rua, número, complemento, bairro, cidade"></textarea>
+            </div>
+
+            <button type="submit">Cadastrar</button>
+        </form>
+    </div>
+
+    <script>
+        // Mantido o mesmo JavaScript do código anterior
+        function validarForm() {
+            const cpf = document.getElementById('cpf').value;
+            if (!validarCPF(cpf)) {
+                alert('CPF inválido!');
+                return false;
+            }
+            alert('Cadastro realizado com sucesso!');
+            return true;
+        }
+
+        function validarCPF(cpf) {
+            cpf = cpf.replace(/[^\d]/g, '');
+            return cpf.length === 11;
+        }
+    </script>
+</body>
+</html>
