@@ -4,184 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tela de Login</title>
-    <style>
-        /* Barra superior */
-        .top-bar {
-            background-color: #042142;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-        }
-
-        /* Barra inferior */
-        .bottom-bar {
-            background-color: #042142;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-        }
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #153c6a;
-            padding: 20px;
-
-        }
-
-        .login-container {
-            background-color: #2475ac;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
-            transition: all 0.3s ease;
-        }
-
-        h2 {
-            text-align: center;
-            color: #247;
-            margin-bottom: 24px;
-            font-size: 2rem;
-        }
-
-        .input-group {
-            margin-bottom: 16px;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #dddfe2;
-            border-radius: 6px;
-            font-size: 16px;87
-            box-sizing: border-box;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #1877f2;
-            box-shadow: 0 0 0 2px #e7f3ff;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #733e85;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 8px;
-        }
-
-        button:hover {
-            background-color: #e977f5;
-        }
-
-        .signup-button {
-            background-color: #153c6a;
-            margin-top: 20px;
-        }
-
-        .signup-button:hover {
-            background-color: #3de0fc;
-        }
-
-        .forgot-password {
-            text-align: center;
-            margin-top: 16px;
-        }
-
-        .forgot-password a {
-            color: white;
-            text-decoration: none;
-            font-size: 14px;
-        }
-
-        .forgot-password a:hover {
-            text-decoration: underline;
-        }
-
-        /*PARA TABLETS*/
-        @media (max-width: 768px) {
-            .login-container {
-                padding: 30px;
-                max-width: 90%;
-            }
-
-            h2 {
-                font-size: 1.75rem;
-                margin-bottom: 20px;
-            }
-
-            button, input {
-                padding: 10px;
-                font-size: 14px;
-            }
-        }
-        /*PARA CELULAR*/
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-
-            .login-container {
-                padding: 20px;
-                border-radius: 6px;
-            }
-
-            h2 {
-                font-size: 1.5rem;
-                margin-bottom: 15px;
-            }
-
-            .input-group {
-                margin-bottom: 12px;
-            }
-
-            .signup-button {
-                margin-top: 15px;
-            }
-
-            .forgot-password a {
-                font-size: 13px;
-            }
-        }
-        /*PARA COMPUTADOR*/
-        @media (min-width: 1200px) {
-            .login-container {
-                max-width: 450px;
-                padding: 50px;
-            }
-
-            h2 {
-                font-size: 2.25rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <body>
     <!-- Barra superior -->
     <header class="top-bar">
         Mapeamento dos Problemas Urbano da Cidade de Osasco-SP
     </header>
-     <!-- Barra inferior -->
+    
+    <!-- Barra inferior -->
     <footer class="bottom-bar">
         imagens
     </footer>
@@ -203,24 +34,6 @@
         </form>
     </div>
 
-    <script>
-        function handleLogin(event) {
-            event.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            console.log('Tentativa de login:', { username, password });
-            alert('Login realizado com sucesso!');
-        }
-
-        function handleSignup() {
-            alert('Redirecionando para cadastro...');
-
-        }
-        function redirectToSignup() {
-            // Redireciona para a página de cadastro
-            window.location.href = 'cadastro.html'; // Altere para o nome da sua página de cadastro
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
