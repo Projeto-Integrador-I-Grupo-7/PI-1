@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tela de Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Barra superior -->
+    <header class="top-bar">
+        Mapeamento dos Problemas Urbano da Cidade de Osasco-SP
+    </header>
+    
+    <!-- Barra inferior -->
+    <footer class="bottom-bar">
+        imagens
+    </footer>
+
+    <div class="login-container">
+        <h2>Login</h2>
+        <form id="loginForm" onsubmit="return handleLogin(event)">
+            <div class="input-group">
+                <input type="text" placeholder="Email ou nome de usuário" id="username" required>
+            </div>
+            <div class="input-group">
+                <input type="password" placeholder="Senha" id="password" required>
+            </div>
+            <button type="submit">Entrar</button>
+            <div class="forgot-password">
+                <a href="#">Esqueceu a senha?</a>
+            </div>
+            <button type="button" class="signup-button" onclick="redirectToSignup()">Criar nova conta</button>
+        </form>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
