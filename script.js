@@ -10,3 +10,8 @@ function handleLogin(event) {
 function redirectToSignup() {
     window.location.href = 'cadastro.html';
 }
+
+function redirectToUs() {
+    window.location.href = 'QS.html';
+}
+
