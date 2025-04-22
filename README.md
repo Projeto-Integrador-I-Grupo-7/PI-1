@@ -1,8 +1,8 @@
 # Backend (Python & Django)
 
-
-<h1> Mapeamento de Problemas Urbanos </h1>
-
+<br>
+<h2 align=center> Mapeamento de Problemas Urbanos </h2>
+<br>
 
 1 - Passos para a Criação do Projeto
 
@@ -27,9 +27,10 @@
 6 - Em Breve continua!
 
 
+<br>
 
-<h4> Links Úteis para o Backend </h4>
-
+<h2> Links Úteis para o Backend </h2>
+<br>
 
 <b> Django (O Python na Web) // Dicionário do Programador </b>
 
