@@ -8,21 +8,31 @@
 
 - Pip Install django
 
+<br>
+
 2 - Execute o  Comando para verificar que o Django realmente foi instalado.
 
 - Django-admin
+
+<br>
 
 3 - Iniciando um projeto com nome (Mapeamanto Urbano Osasco).
 
 - django-admin startproject mapeamento_urbano_osasco
 
-4 - Para Testar se o projeto esta no ar na sua máquina local, você pode
+<br>
 
-- Você pode clicar no link disponibilizado, depois do "start" do projeto, exemplo do link: "http://127.0.0.1:8000/" 
+4 - Testando o projeto na sua máquina local. 
+
+- Você pode clicar no link disponibilizado, depois do "start" do projeto, exemplo do link: "http://127.0.0.1:8000/"
+
+<br>
 
 5 - Criar uma App, para isso é necessário estar dentro da página do Projeto
 
 - python manage.py startapp "mapeando_problemas_urbanos"
+
+<br>
 
 6 - Em Breve continua!
 
