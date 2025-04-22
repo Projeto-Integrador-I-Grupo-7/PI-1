@@ -1,10 +1,10 @@
 # Backend (Python & Django)
 
 <br>
-<h2 align=center> Mapeamento de Problemas Urbanos </h2>
+<h2 align=center> Passos para a Criação do Backend </h2>
 <br>
 
-1 - Passos para a Criação do Projeto
+1 - Instalando o Django.
 
 - Pip Install django
 
