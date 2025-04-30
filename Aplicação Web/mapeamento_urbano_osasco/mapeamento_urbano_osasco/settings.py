@@ -36,7 +36,8 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
+    'django.contrib.staticfiles', # Para arquivos do CSS e JavaScript
+    'mapeando_problemas_urbanos', #  Adicionei o App para o Django reconhecer as View, Models, Urls e outros.
 ]
 
 MIDDLEWARE = [
