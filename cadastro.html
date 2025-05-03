@@ -35,6 +35,27 @@
                        placeholder="Digite seu nome completo">
             </div>
 
+            <!-- Campo de senha -->
+            <div class="form-group">
+                <label for="senha">Senha:</label>
+                <input type="password" id="senha" name="senha" required 
+                       minlength="6" maxlength="10"
+                       pattern="^(?=.*[A-Z])(?=.*\d).{6,10}$"
+                       placeholder="Mín 6 car, máx 10, com 1 maiúscula e 1 número"
+                       title="A senha deve ter entre 6 e 10 caracteres, contendo pelo menos uma letra maiúscula e um número">
+            </div>
+
+            <!-- Campo de confirmação de senha -->
+            <div class="form-group">
+                <label for="confirmar_senha">Confirme sua Senha:</label>
+                <input type="password" id="confirmar_senha" name="confirmar_senha" required
+                       minlength="6" maxlength="10"
+                       placeholder="Digite a senha novamente">
+                <span id="senhaError" class="error-message" style="color: red; display: none;"></span>
+            </div>
+
+
+
             <div class="cpf-tel">
                 <div class="form-group">
                     <label for="cpf">CPF:</label>
