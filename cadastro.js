@@ -12,3 +12,11 @@ function validarCPF(cpf) {
     cpf = cpf.replace(/[^\d]/g, '');
     return cpf.length === 11;
 }
+
+function redirectToUni() {
+    window.open("https://univesp.br/", "_blank");
+}
+
+function redirectToUs() {
+    window.location.href = 'QS.html';
+}
