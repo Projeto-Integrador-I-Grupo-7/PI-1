@@ -15,3 +15,8 @@ function redirectToUs() {
     window.location.href = 'QS.html';
 }
 
+function redirectToUni() {
+    window.open("https://univesp.br/", "_blank");
+}
+
+
