@@ -1,0 +1,22 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitação Enviada</title>
+    <link rel="stylesheet" href="{% static 'global/css/style.css' %}">
+</head>
+<body>
+    <div class="form-container">  <!-- Div container já está aqui -->
+        <h1>Obrigado!</h1>
+        <p class="message">Sua solicitação foi enviada com sucesso.</p>
+
+        {% if protocolo %}
+            <p class="message">Seu número de protocolo é: <strong>{{ protocolo }}</strong></p>
+        {% endif %}
+
+        <a href="{% url 'contact:index' %}">Voltar à página inicial</a>  <!-- Botão "Voltar à página inicial" -->
+    </div>
+</body>
+</html>

@@ -1,0 +1,130 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova Solicitação</title>
+    <link rel="stylesheet" href="{% static 'global/css/index.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/formulario.css' %}"> 
+
+    <!-- Fontes e Ícones Externos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+
+</head>
+
+<body>
+
+    <header class="app-header">
+        <h2 class="app-title">Mapeamento Problemas Urbanos - Osasco-SP</h2>
+    </header>
+
+
+<div class="form-container">
+    <h1>Solicitação de Atendimento</h1>
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.errors %}
+            <div class="error">
+                <ul class="errorlist">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col">
+                <label for="{{ form.assunto.id_for_label }}">Assunto</label>
+                <select name="assunto" id="{{ form.assunto.id_for_label }}">
+                    <option value="">Selecione o Assunto</option>
+                    {% for assunto in assuntos %}
+                        <option value="{{ assunto.id }}" {% if form.assunto.value == assunto.id %} selected {% endif %}>
+                            {{ assunto.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if form.assunto.errors %}
+                    <div class="error">{{ form.assunto.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="col">
+                <label for="{{ form.nome_morador.id_for_label }}">Nome</label>
+                {{ form.nome_morador }}
+                {% if form.nome_morador.errors %}
+                    <div class="error">{{ form.nome_morador.errors }}</div>
+                {% endif %}
+
+                <label for="{{ form.email_morador.id_for_label }}">Email</label>
+                {{ form.email_morador }}
+                {% if form.email_morador.errors %}
+                    <div class="error">{{ form.email_morador.errors }}</div>
+                {% endif %}
+
+                <label for="{{ form.telefone.id_for_label }}">Telefone</label>
+                {{ form.telefone }}
+                {% if form.telefone.errors %}
+                    <div class="error">{{ form.telefone.errors }}</div>
+                {% endif %}
+
+                <label for="{{ form.documento.id_for_label }}">Documento</label>
+                {{ form.documento }}
+                {% if form.documento.errors %}
+                    <div class="error">{{ form.documento.errors }}</div>
+                {% endif %}
+
+                <label for="{{ form.endereco.id_for_label }}">Endereço do problema</label>
+                {{ form.endereco }}
+                {% if form.endereco.errors %}
+                    <div class="error">{{ form.endereco.errors }}</div>
+                {% endif %}
+
+                <label for="{{ form.latitude.id_for_label }}">Latitude</label>
+                {{ form.latitude }}
+                {% if form.latitude.errors %}
+                    <div class="error">{{ form.latitude.errors }}</div>
+                {% endif %}
+
+                <label for="{{ form.longitude.id_for_label }}">Longitude</label>
+                {{ form.longitude }}
+                {% if form.longitude.errors %}
+                    <div class="error">{{ form.longitude.errors }}</div>
+                {% endif %}
+
+                <label for="{{ form.detalhes.id_for_label }}">Detalhes</label>
+                {{ form.detalhes }}
+                {% if form.detalhes.errors %}
+                    <div class="error">{{ form.detalhes.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Botão centralizado -->
+        <div class="button-container">
+            <button type="submit" class="submit-button">Enviar Solicitação</button>
+        </div>
+    </form>
+
+</div>
+
+<footer class="app-footer">
+         
+    <img src="{% static 'global/images/univesp_logo.png' %}" alt="Logo Univesp"> <!-- Verifique o caminho da imagem -->
+
+     <span>Quem somos</span>
+     <span>Grupo 7</span>
+
+</footer>
+
+</body>
+</html>

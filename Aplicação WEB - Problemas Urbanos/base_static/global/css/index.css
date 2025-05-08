@@ -1,0 +1,223 @@
+/* style.css */
+
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+
+    min-height: 100vh;
+    background-color: #153c6a;
+    margin: 0;
+    padding: 0;
+    width: 100%; /* Garante que o body ocupe toda a largura */
+    overflow-x: hidden; /* Opcional: previne barras de rolagem horizontais acidentais */
+    background-size: 100%;
+}
+
+
+/* 1. Variáveis e Reset */
+:root {
+    --primary-color: #0056b3; /* Azul médio (sidebar) */
+    --dark-blue: #003366;     /* Azul escuro (header/footer) */
+    --light-blue: #007bff;    /* Azul claro (botões/hover) */
+    --lighter-blue: #4dabf7;  /* Azul mais claro (hover alternativo/bordas) */
+    --text-color-on-blue: #ffffff; /* Branco */
+    --text-color-dark: #333333;
+    --background-grey: #f4f4f4;
+    --border-color: #cccccc;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --secondary-color: #6c757d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body { font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; height: 100%; background-color: var(--background-grey); color: var(--text-color-dark); }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
+  
+  /* 2. Layout Geral */
+  .content-wrapper { display: flex; flex-grow: 1; overflow: hidden; position: relative; min-height: 0; }
+  .main-content { flex-grow: 1; height: 100%; position: relative; display: flex; flex-direction: column; /* Empilha barra de busca e mapa */}
+  #mapa-container { /* ID do container do mapa */
+    flex-grow: 1; /* Para ocupar o espaço restante no main-content */
+    min-height: 0; /* Para permitir encolher se necessário em layouts flex */
+    z-index: 500;
+    background-color: #eee;
+  }
+  
+  /* 3. Cabeçalho */
+
+  .app-header {
+    width: 100vw; /* Ou width: 100%; se o body já está configurado corretamente */
+    background-color: #153c6a; /* Cor de fundo para visualização */
+    padding: 15px 0; /* Padding vertical, sem padding horizontal no contêiner do menu */
+    box-sizing: border-box; /* Importante: faz com que padding e border não aumentem a largura total */
+    display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background-color: var(--dark-blue); color: var(--text-color-on-blue); flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 1001; }
+  .app-title { font-size: 1.1em; font-weight: 500; text-align: center; flex-grow: 1; margin: 0 15px; white-space: nowrap; }
+  .menu-btn, .user-profile-btn { background: none; border: none; color: var(--text-color-on-blue); font-size: 1.5em; cursor: pointer; padding: 5px; }
+  .login-btn { display: inline-block; text-decoration: none; font-size: 0.9em; background-color: var(--light-blue); color: var(--text-color-on-blue); padding: 8px 18px; border: none; border-radius: 20px; cursor: pointer; transition: background-color 0.2s ease; font-weight: 500; }
+  .login-btn:hover { background-color: #0069d9; }
+  .user-actions { position: relative; }
+  .user-dropdown { display: none; position: absolute; top: 110%; right: 0; background-color: white; color: var(--text-color-dark); border: 1px solid var(--border-color); border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); min-width: 180px; z-index: 1002; }
+  .user-dropdown a { display: block; padding: 10px 15px; color: var(--text-color-dark); text-decoration: none; font-size: 0.9em; white-space: nowrap; }
+  .user-dropdown a:hover { background-color: #f0f0f0; }
+  .user-dropdown hr { border: none; border-top: 1px solid #eee; margin: 5px 0; }
+  
+  /* 4. Barra de Pesquisa Global */
+  .global-search-container {
+      padding: 10px 20px;
+      background-color: #f8f9fa; /* Um cinza claro */
+      border-bottom: 1px solid #dee2e6;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      position: relative; /* Para o dropdown do autocomplete */
+      z-index: 1000; /* Acima do mapa, mas abaixo do header se sobreposto */
+      flex-shrink: 0; /* Não encolher */
+  }
+  .global-search-container .autoComplete_wrapper { /* Wrapper para o input, exigido por autoComplete.js */
+      width: 100%;
+  }
+  .global-search-container input[type="search"] {
+      width: 100%;
+      padding: 10px 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 1em;
+      outline: none;
+      color: var(--text-color-dark); /* Garante que o texto do input seja escuro */
+  }
+  .global-search-container input[type="search"]::placeholder {
+      color: #888; /* Cor do placeholder */
+  }
+  .global-search-container input[type="search"]:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.25);
+  }
+  
+  /* 5. Sidebar */
+  .sidebar { position: absolute; left: -300px; top: 0; bottom: 0; width: 300px; background-color: var(--primary-color); color: var(--text-color-on-blue); padding: 0; box-shadow: 2px 0 5px rgba(0,0,0,0.2); transition: left 0.3s ease-in-out; z-index: 1000; overflow: hidden; display: flex; flex-direction: column; }
+  .sidebar.open { left: 0; }
+  .sidebar[aria-hidden="true"] { left: -300px; } .sidebar[aria-hidden="false"] { left: 0; }
+  .sidebar-header { padding: 15px 20px; font-weight: 500; border-bottom: 1px solid var(--lighter-blue); margin-bottom: 0; font-size: 1em; flex-shrink: 0; }
+  .sidebar-content { list-style: none; flex-grow: 1; overflow-y: auto; padding: 0; margin: 0; }
+  /* Estilo geral para itens da lista na sidebar */
+  .sidebar-content li {
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.95em;
+    flex-wrap: nowrap; /* Evitar quebra de linha no item principal */
+  }
+  .sidebar-content li:last-child { border-bottom: none; }
+  .sidebar-content li:hover { background-color: var(--light-blue); }
+  .sidebar-content li > span { flex-grow: 1; margin-right: 10px; }
+  .sidebar-content li i { font-size: 0.8em; margin-left: 10px; opacity: 0.7; flex-shrink: 0; }
+  /* Estilo específico para o item de cadastro quando logado */
+  .sidebar-content li#item-cadastrar-pin-sidebar { justify-content: flex-start; }
+  .sidebar-content li#item-cadastrar-pin-sidebar > span { flex-grow: 0; }
+  .sidebar-content li#item-cadastrar-pin-sidebar > i.fa-map-marker-alt { margin-right: 8px; margin-left: 0; opacity: 1; }
+  .sidebar-content li#item-cadastrar-pin-sidebar > i.fa-chevron-right { margin-left: auto; } /* Empurra seta para a direita */
+  .sidebar-content li#item-cadastrar-pin-sidebar.active-registration { background-color: rgba(0, 0, 0, 0.15); }
+  
+  /* --- SUBMENU DE CADASTRO/PESQUISA REMOVIDO DA SIDEBAR --- */
+  /* .sidebar .submenu ... (Estilos removidos pois o submenu não existe mais aqui) */
+  /* .address-search-container ... (Estilos removidos) */
+  /* #input-busca-sidebar ... (Estilos removidos) */
+  
+  .sidebar-footer { padding: 15px 20px 10px 20px; border-top: 1px solid var(--lighter-blue); flex-shrink: 0; }
+  .sidebar-footer button { display: flex; align-items: center; justify-content: center; width: 100%; padding: 12px; background-color: var(--dark-blue); border: none; color: var(--text-color-on-blue); font-size: 1em; cursor: pointer; border-radius: 4px; transition: background-color 0.2s ease; }
+  .sidebar-footer button:hover { background-color: var(--light-blue); }
+  .sidebar-footer button i { margin-left: 8px; }
+  
+  /* 6. Autocomplete (Lista de Resultados - aplicado na barra global e potencialmente na sidebar se reintroduzido) */
+  /* É crucial que o z-index seja alto para aparecer sobre a sidebar e mapa */
+  /* .autoComplete_wrapper { position: relative; width: 100%; } -> Movido para local específico (barra global) */
+  .autoComplete_list { /* Estilo geral para a lista de resultados do autoComplete.js */
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 100%; /* Posição padrão, pode ser ajustada por JS ou contexto */
+      z-index: 1100; /* BEM ALTO para sobrepor outros elementos */
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-top: none; /* Para se juntar visualmente ao input */
+      border-radius: 0 0 4px 4px;
+      max-height: 250px;
+      overflow-y: auto;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  .autoComplete_list .no_result { padding: 10px; color: #777; font-style: italic; font-size: 0.9em; }
+  .autoComplete_list > ul { list-style: none; padding: 0; margin: 0; }
+  .autoComplete_list > ul > li { color: var(--text-color-dark); padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 0.9em; line-height: 1.4; }
+  .autoComplete_list > ul > li:last-child { border-bottom: none; }
+  .autoComplete_list > ul > li mark { background-color: #e8f0fe; color: inherit; font-weight: bold; }
+  .autoComplete_list > ul > li:hover, .autoComplete_list > ul > li[aria-selected="true"] { background-color: #f0f8ff; color: var(--primary-color); }
+  
+  /* 7. Modal (Usado para Cadastro) */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.65); display: none; align-items: center; justify-content: center; z-index: 1050; } /* z-index alto */
+  .modal-overlay.active { display: flex; }
+  .modal-content { background-color: white; padding: 25px 30px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); min-width: 350px; max-width: 500px; width: 90%; z-index: 1051; color: var(--text-color-dark); }
+  .modal-content h2 { margin-bottom: 20px; color: var(--primary-color); text-align: center; font-size: 1.3em; }
+  .modal-content label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9em; }
+  .modal-content input[type="text"], .modal-content input[type="password"], .modal-content textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 1em; }
+  .modal-content textarea { resize: vertical; min-height: 90px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 25px; }
+  .modal-actions button { padding: 10px 25px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 0.95em; transition: background-color 0.2s, transform 0.1s; }
+  .modal-actions button:active { transform: scale(0.98); }
+  .modal-actions .confirm-btn { background-color: var(--success-color); color: white; } .modal-actions .confirm-btn:hover { background-color: #218838; }
+  .modal-actions .cancel-btn { background-color: var(--danger-color); color: white; } .modal-actions .cancel-btn:hover { background-color: #c82333; }
+  .modal-actions .secondary-btn { background-color: var(--secondary-color); color: white; } .modal-actions .secondary-btn:hover { background-color: #5a6268; }
+  /* Links dentro do modal */
+  .modal-links { margin-top: 20px; text-align: center; font-size: 0.9em; }
+  .modal-links a { color: var(--primary-color); text-decoration: none; margin: 0 10px; }
+  .modal-links a:hover { text-decoration: underline; }
+  /* Lista tipo problema */
+  .problem-type-list { list-style: none; max-height: 220px; overflow-y: auto; border: 1px solid #eee; padding: 5px 0; margin-bottom: 20px; border-radius: 4px; }
+  .problem-type-list li { padding: 0; border-bottom: 1px solid #f0f0f0; } .problem-type-list li:last-child { border-bottom: none; }
+  .problem-type-list label { display: flex; align-items: center; cursor: pointer; font-weight: normal; margin-bottom: 0; padding: 10px 15px; transition: background-color 0.1s ease; }
+  .problem-type-list label:hover { background-color: #f8f9fa; }
+  .problem-type-list input[type="radio"] { margin-right: 12px; cursor: pointer; transform: scale(1.1); }
+  
+  /* 8. Outros Elementos UI */
+  .confirmation-message { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background-color: rgba(40, 167, 69, 0.9); color: white; padding: 12px 25px; border-radius: 5px; z-index: 1100; display: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-size: 1em; opacity: 0; transition: opacity 0.3s ease-in-out; }
+  .confirmation-message.show { display: block; opacity: 1;}
+  .confirmation-message i { margin-left: 8px; }
+  /* Botão Flutuante (FAB) */
+  .fab-add-pin { position: absolute; bottom: 30px; right: 30px; width: 56px; height: 56px; background-color: var(--light-blue); color: white; border: none; border-radius: 50%; font-size: 24px; line-height: 56px; text-align: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); cursor: pointer; transition: background-color 0.2s ease, transform 0.1s ease, display 0s linear 0.1s; z-index: 990; display: none; }
+  .fab-add-pin:hover { background-color: #0069d9; }
+  .fab-add-pin:active { transform: scale(0.95); }
+  
+  /* 9. Rodapé */
+  .app-footer { 
+    width: 100vw; /* Ou width: 100%; se o body já está configurado corretamente */
+    background-color: #153c6a; /* Cor de fundo para visualização */
+    padding: 15px 0; /* Padding vertical, sem padding horizontal no contêiner do menu */
+    box-sizing: border-box; /* Importante: faz com que padding e border não aumentem a largura total */    
+    display: flex; align-items: center; justify-content: space-around; padding: 10px 20px; background-color: var(--dark-blue); color: var(--text-color-on-blue); flex-shrink: 0; font-size: 0.85em; box-shadow: 0 -2px 5px rgba(0,0,0,0.1); }
+  .app-footer img { height: 25px; vertical-align: middle; margin-right: 15px; }
+  .app-footer span { margin: 0 10px; opacity: 0.9; }
+  
+  /* 10. Responsividade */
+  @media (max-width: 768px) {
+    .app-title { font-size: 1em; }
+    .sidebar { width: 260px; left: -260px; }
+    .app-footer span { font-size: 0.8em; margin: 0 8px; }
+    .app-footer img { height: 25px; margin-right: 10px;}
+    .modal-content { min-width: 90%; padding: 20px; }
+    .app-header { padding: 8px 15px;}
+    .fab-add-pin { bottom: 20px; right: 20px; width: 50px; height: 50px; font-size: 20px; line-height: 50px;}
+    .global-search-container { padding: 8px 15px; }
+    .global-search-container input[type="search"] { font-size: 0.9em; padding: 8px 12px; }
+  }
+  @media (max-width: 480px) {
+    .app-title { display: none; }
+    .login-btn { padding: 6px 12px; font-size: 0.8em;}
+    .app-footer { flex-direction: column; font-size: 0.75em; padding: 8px;}
+    .app-footer img { margin-bottom: 5px; }
+    .app-footer span { margin: 2px 0;}
+    .fab-add-pin { bottom: 15px; right: 15px; }
+    .global-search-container { padding: 8px 10px; }
+    .global-search-container input[type="search"] { font-size: 0.85em; }
+  }
