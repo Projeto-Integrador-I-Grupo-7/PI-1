@@ -1,1 +1,0 @@
-# Esta parte é destinada para o Python reconhecer a pasta como parte do projeto "Python"
