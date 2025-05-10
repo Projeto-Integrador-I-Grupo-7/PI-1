@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    'django.contrib.admin.apps.SimpleAdminConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -52,6 +52,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'project.urls'
 
+LOGIN_URL = 'login'  # Nome da URL para a qual o usuário será redirecionado se não estiver logado
+LOGIN_REDIRECT_URL = 'contact/mapa' # Nome da URL para onde o usuário vai após o login bem-sucedido
+LOGOUT_REDIRECT_URL = 'index' # Para onde o usuário vai após o logout (opcional, pode ser 'login' também)
+
+
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -61,9 +67,11 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
+                'django.contrib.auth.context_processors.auth', # Importante para ter 'user' no template
                 'django.contrib.messages.context_processors.messages',
+
             ],
         },
     },

@@ -3,6 +3,15 @@ from contact import models
 from .models import StatusSolicitacao, SecretariaEmail, AssuntoReclamacao, Solicitacao
 
 
+
+#class MyAdminSite(admin.AdminSite):
+    site_header = "Administração"
+
+
+#admin_site = MyAdminSite(name="myadmin")
+# admin_site.register(MyModel)
+
+
 # Registrar os modelos na ordem desejada
 
 @admin.register(StatusSolicitacao)

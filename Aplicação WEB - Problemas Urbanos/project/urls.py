@@ -16,8 +16,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.contrib.auth import views as auth_views # Views de autenticação do Django
+
 
 urlpatterns = [
     path('', include('contact.urls')),
     path('admin/', admin.site.urls),
+   
+    # URLs de Autenticação
+    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'), # LogoutView usa next_page de LOGOUT_REDIRECT_URL
+
+
+
 ]

@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required # Decorador para proteger views
 # from .models import Solicitacao 
 # from .forms import SolicitacaoForm
 
-
 # Create your views here.
+
+
 
 def index(request):
     return render(
@@ -11,11 +13,15 @@ def index(request):
         'contact/index.html',
     )
 
+# View protegida
+@login_required # Esta linha garante que apenas usuários logados acessem
 def mapa(request):
-    return render(
-        request,
-        'contact/mapa.html',
-    )
+    # Você pode acessar o usuário logado com request.user
+    context = {
+        'usuario': request.user
+    }
+    return render(request, 'contact/mapa.html', context)
+
     
 
 '''
