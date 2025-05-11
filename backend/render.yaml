@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: projeto-integrador-backend
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn myproject.wsgi:application"
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        value: sua_chave_secreta_segura_aqui
+      - key: DATABASE_URL
+        value: postgresql://USUARIO:SENHA@HOST:5432/NOMEDB
