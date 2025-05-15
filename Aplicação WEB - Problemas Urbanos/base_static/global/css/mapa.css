@@ -169,7 +169,24 @@
   .fab-add-pin:active { transform: scale(0.95); }
   
   /* 9. Rodapé */
-  .app-footer { display: flex; align-items: center; justify-content: space-around; padding: 10px 20px; background-color: var(--dark-blue); color: var(--text-color-on-blue); flex-shrink: 0; font-size: 0.85em; box-shadow: 0 -2px 5px rgba(0,0,0,0.1); }
+    .app-footer { 
+    width: 100vw; /* Ou width: 100%; se o body já está configurado corretamente */
+    background-color: #153c6a; /* Cor de fundo para visualização */
+    padding: 15px 0; /* Padding vertical, sem padding horizontal no contêiner do menu */
+    box-sizing: border-box; /* Importante: faz com que padding e border não aumentem a largura total */    
+    display: flex; 
+    align-items: center; 
+    justify-content: space-around; 
+    padding: 10px 20px; 
+    background-color: var(--dark-blue); color: var(--text-color-on-blue); 
+    flex-shrink: 0; 
+    font-size: 0.85em; 
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    position: sticky;
+    bottom: 0px;
+  }
+  
+  
   .app-footer img { height: 25px; vertical-align: middle; margin-right: 15px; }
   .app-footer span { margin: 0 10px; opacity: 0.9; }
   

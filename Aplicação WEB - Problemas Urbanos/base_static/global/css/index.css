@@ -1,24 +1,45 @@
 /* style.css */
-
-body {
-    font-family: Arial, sans-serif;
-    display: flex;
-    justify-content: center;
-
-    min-height: 100vh;
-    background-color: #153c6a;
+ body{
     margin: 0;
-    padding: 0;
-    width: 100%; /* Garante que o body ocupe toda a largura */
-    overflow-x: hidden; /* Opcional: previne barras de rolagem horizontais acidentais */
+    background-repeat: no-repeat;
     background-size: 100%;
+    
+}
+
+nav{
+  background-attachment: fixed;
+  background-color: #153c6a; /* Cor de fundo para visualização */
+  justify-content: space;
+  margin-top: 0;
+  padding: 0 30px;
+
 }
 
 
-  
+/* Estilos para a página de sucesso */
+h1 {
+  color: whitesmoke; /* Cor verde para o título */
+  text-align: center;
+  font-size: 40px;
+}
+
+/* Cabeçalho */
+
+.titulo {
+  color: whitesmoke; /* Cor verde para o título */
+  text-align: center;
+  font-size: 40px;
+
+}
+
+
+.app-title { font-size: 1.1em; font-weight: 500; text-align: center; flex-grow: 1; margin: 0 15px; white-space: nowrap; }
+
+
   /* 3. Cabeçalho */
 
   .app-header {
+    background-attachment: fixed;
     width: 100vw; /* Ou width: 100%; se o body já está configurado corretamente */
     background-color: #153c6a; /* Cor de fundo para visualização */
     padding: 15px 0; /* Padding vertical, sem padding horizontal no contêiner do menu */
@@ -40,7 +61,17 @@ body {
     background-color: #153c6a; /* Cor de fundo para visualização */
     padding: 15px 0; /* Padding vertical, sem padding horizontal no contêiner do menu */
     box-sizing: border-box; /* Importante: faz com que padding e border não aumentem a largura total */    
-    display: flex; align-items: center; justify-content: space-around; padding: 10px 20px; background-color: var(--dark-blue); color: var(--text-color-on-blue); flex-shrink: 0; font-size: 0.85em; box-shadow: 0 -2px 5px rgba(0,0,0,0.1); }
+    display: flex; 
+    align-items: center; 
+    justify-content: space-around; 
+    padding: 10px 20px; 
+    background-color: var(--dark-blue); color: var(--text-color-on-blue); 
+    flex-shrink: 0; 
+    font-size: 0.85em; 
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    position: relative;
+    bottom: 0;
+  }
   .app-footer img { height: 25px; vertical-align: middle; margin-right: 15px; }
   .app-footer span { margin: 0 10px; opacity: 0.9; }
   

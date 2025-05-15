@@ -1,0 +1,124 @@
+/* Estilos globais para o corpo */
+body {
+  background: whitesmoke;
+  font-family: Arial, sans-serif;
+  margin: 40px;
+}
+
+/* Estilos para os formulários e seus campos */
+label {
+  display: block;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  box-sizing: border-box;
+}
+
+/* Estilo para botões */
+button {
+  margin-top: 20px;
+  padding: 10px 20px;
+}
+
+/* Container do formulário */
+.form-container {
+  max-width: 800px;
+  margin: auto;
+}
+
+/* Layout em grid para o formulário */
+.row {
+  display: flex;
+  gap: 30px;
+}
+
+.col {
+  flex: 1;
+}
+
+/* Estilos para erros de validação */
+.error {
+  color: red;
+}
+
+.errorlist {
+  color: red;
+}
+
+/* Estilos para a página de sucesso */
+h1 {
+  color: #4CAF50; /* Cor verde para o título */
+  text-align: center;
+  font-size: 36px;
+}
+
+.message {
+  font-size: 20px;
+  margin-top: 30px;
+  text-align: center;
+  color: #333;
+}
+
+/* Estilos para o botão "Voltar à página inicial" */
+a {
+  display: block; /* Faz com que o link ocupe toda a linha */
+  width: max-content; /* Ajusta o botão para o tamanho do conteúdo */
+  margin: 30px auto 0 auto; /* Centraliza o link com margem superior e inferior */
+  text-decoration: none;
+  background-color: #007BFF;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+a:hover {
+  background-color: #0056b3;
+}
+
+/* Centraliza o botão de envio */
+.button-container {
+  text-align: center;
+  margin-top: 30px;
+}
+
+/* Estilo visual do botão de envio */
+.submit-button {
+  background-color: #007BFF;
+  color: white;
+  padding: 10px 25px; /* Ajuste no padding conforme solicitado */
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* Efeito de hover no botão */
+.submit-button:hover {
+  background-color: #0056b3;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 768px) {
+  .row {
+    flex-direction: column;
+  }
+
+  .col {
+    width: 100%;
+  }
+
+  .form-container {
+    padding: 0 15px;
+  }
+
+  button,
+  .submit-button {
+    width: 100%;
+  }
+}

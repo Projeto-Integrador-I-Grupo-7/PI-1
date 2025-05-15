@@ -16,27 +16,29 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     
     <!-- CSS Local -->
-    <link rel="stylesheet" href="{% static 'global/css/index.css' %}">
+    <!-- <link rel="stylesheet" href="{% static 'global/css/index.css' %}"> -->
     <link rel="stylesheet" href="{% static 'global/css/formulario.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/mapa.css' %}">
 
 
 
 </head>
 
+
+
+
+
 <body>
+
+    
     <!-- Barra superior -->
     <header class="app-header">        
         <h2 class="app-title">Mapeamento Problemas Urbanos - Osasco-SP</h2>
 
         <div class="user-actions">
-            
             <!-- Link para página externa de login -->
-            <a href="login" class="login-btn" id="link-login" target="_blank"> Login </a>
-            
-            <!-- Botão de perfil para usuário logado -->
-            <button class="user-profile-btn" id="botao-perfil-usuario" style="display: none;" aria-label="Opções do usuário" aria-haspopup="true" aria-expanded="false">
-                 <i class="fas fa-user-circle" aria-hidden="true"></i>
-            </button>
+            <a href="login" class="login-btn" id="link-login" target="_blank"> Solicitação </a>
+            <a href="admin" class="login-btn" id="link-login" target="_blank"> Admin </a>
 
         </div>
 

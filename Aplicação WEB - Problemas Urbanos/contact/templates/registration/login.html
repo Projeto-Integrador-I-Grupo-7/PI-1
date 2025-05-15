@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     
     <!-- CSS Local -->
-    <link rel="stylesheet" href="{% static 'global/css/index.css' %}">
+    <link rel="stylesheet" href="{% static 'global/css/mapa.css' %}">
     <link rel="stylesheet" href="{% static 'global/css/formulario.css' %}">
 
 
@@ -27,54 +27,50 @@
     <!-- Barra superior -->
     <header class="app-header">        
         <h2 class="app-title">Mapeamento Problemas Urbanos - Osasco-SP</h2>
-
-        <div class="user-actions">
-            
-            <!-- Link para página externa de login -->
-            <a href="contact/mapa" class="login-btn" id="link-login" target="_blank"> Acessar Mapa</a>
-            
-            <!-- Botão de perfil para usuário logado -->
-            <button class="user-profile-btn" id="botao-perfil-usuario" style="display: none;" aria-label="Opções do usuário" aria-haspopup="true" aria-expanded="false">
-                 <i class="fas fa-user-circle" aria-hidden="true"></i>
-            </button>
-
-        </div>
-
-
-
     </header>
 
-    <h2>Login</h2>
-    {% if form.errors %}
-        <p style="color: red;">Seu usuário e senha não correspondem. Tente novamente.</p>
-    {% endif %}
-    
-    {% if next %}
-        {% if user.is_authenticated %}
-        <href="contact/mapa">
-        
 
-        {% else %}
-            <p>Por favor, faça login para ver esta página.</p>
-        {% endif %}
-    {% endif %}
-    
-    <form method="post" action="{% url 'login' %}">
-        {% csrf_token %}
-        <table>
-            <tr>
-                <td>{{ form.username.label_tag }}</td>
-                <td>{{ form.username }}</td>
-            </tr>
-            <tr>
-                <td>{{ form.password.label_tag }}</td>
-                <td>{{ form.password }}</td>
-            </tr>
-        </table>
-        <input type="submit" value="Entrar">
-        <input type="hidden" name="next" value={{ next }} >
-    </form>
-    {# <p><a href="{% url 'password_reset' %}">Esqueceu a senha?</a></p> #}
+        <div class="form-container">
+            
+            <h1>Login</h1>
+
+            {% if form.errors %}
+                <p style="color: red;">Seu usuário e senha não correspondem. Tente novamente.</p>
+            {% endif %}
+            
+            {% if next %}
+                {% if user.is_authenticated %}
+                <href="contact/solicitar">
+                
+
+                {% else %}
+                    <p>Por favor, faça login para ver esta página.</p>
+                {% endif %}
+            {% endif %}
+            
+            <div class="row">
+            <div class="col">
+                    <form method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        <table>
+                            <tr>
+                                <td>{{ form.username.label_tag }}</td>
+                                <td>{{ form.username }}</td>
+                            </tr>
+                            <tr>
+                                <td>{{ form.password.label_tag }}</td>
+                                <td>{{ form.password }}</td>
+                            </tr>
+                        </table>
+                        <input type="submit" value="Entrar">
+                        <input type="hidden" name="next" value={{ next }} >
+                    </form>
+            </div>
+            </div>
+
+             <p> <a href="cadastro"> Não tem Cadastro? Cadastre-se Aqui </a></p>
+
+        </div>
 
 
     <!-- Barra Inferior -->

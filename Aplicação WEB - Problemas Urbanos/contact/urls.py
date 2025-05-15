@@ -7,9 +7,10 @@ app_name = 'contact'
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('login/contact/mapa/', views.mapa, name='mapa'),  
-    path('contact/solicitar/', views.solicitar, name='solicitar'),
+    path('contact/mapa/', views.mapa, name='mapa'),  
+    path('login/contact/solicitar/', views.solicitar, name='solicitar'),
     path('contact/sucesso/', views.pagina_sucesso, name='pagina_sucesso'),
-    # path("myadmin/", admin_site.urls)
+    path('login/contact/cadastro/', views.cadastro, name='cadastro'),
 
+    # path("myadmin/", admin_site.urls)
 ]

@@ -53,7 +53,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'project.urls'
 
 LOGIN_URL = 'login'  # Nome da URL para a qual o usuário será redirecionado se não estiver logado
-LOGIN_REDIRECT_URL = 'contact/mapa' # Nome da URL para onde o usuário vai após o login bem-sucedido
+LOGIN_REDIRECT_URL = 'contact/solicitar' # Nome da URL para onde o usuário vai após o login bem-sucedido
 LOGOUT_REDIRECT_URL = 'index' # Para onde o usuário vai após o logout (opcional, pode ser 'login' também)
 
 

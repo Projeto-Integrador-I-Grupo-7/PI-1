@@ -25,7 +25,10 @@ urlpatterns = [
    
     # URLs de Autenticação
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('login/cadastro', auth_views.LoginView.as_view(template_name='registration/cadastro.html'), name='cadastro'),
+    
     path('logout/', auth_views.LogoutView.as_view(), name='logout'), # LogoutView usa next_page de LOGOUT_REDIRECT_URL
+    
 
 
 
