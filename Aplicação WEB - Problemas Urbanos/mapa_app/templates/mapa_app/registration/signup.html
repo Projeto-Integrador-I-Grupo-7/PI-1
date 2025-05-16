@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Criar Nova Conta - Mapeamento Problemas Urbanos{% endblock %}
+
+{% block page_specific_css %}
+    {# Você pode mover estes estilos para um arquivo CSS separado depois, se preferir #}
+    <style>
+        .auth-container {
+            max-width: 500px;
+            margin: 40px auto;
+            padding: 30px;
+            max-height: 90vh;          /* altura máxima de 90% da tela */
+            overflow-y: auto;          /* ativa rolagem vertical se necessário */
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+            
+        }
+        .auth-container h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--primary-color, #0056b3); /* Usa variável CSS do seu style_index.css ou um fallback */
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #333;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form_group input[type="password"], /* Corrigido typo aqui */
+        .form-group input[type="password"] { /* Duplicado, um deve ser removido ou corrigido*/
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color, #ccc);
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        .form-group input:focus {
+            border-color: var(--primary-color, #0056b3);
+            box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.15);
+            outline: none;
+        }
+        .helptext {
+            font-size: 0.875em;
+            color: #666;
+            display: block;
+            margin-top: 4px;
+        }
+        ul.errorlist {
+            list-style-type: none;
+            padding: 8px 10px;
+            margin: 8px 0 0 0;
+            color: var(--danger-color, #dc3545);
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        ul.errorlist li {
+            margin-bottom: 3px;
+        }
+        ul.errorlist li:last-child {
+            margin-bottom: 0;
+        }
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 10px 15px;
+            background-color: var(--success-color, #28a745);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.05em;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .submit-btn:hover {
+            background-color: #218838; /* Darker success color */
+        }
+        .auth-links {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+        .auth-links a {
+            color: var(--primary-color, #0056b3);
+            text-decoration: none;
+        }
+        .auth-links a:hover {
+            text-decoration: underline;
+        }
+        .alert {
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .alert-error { /* Renomeado de alert-danger para coincidir com message.tags 'error' */
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+    </style>
+{% endblock %}
+
+{# Removendo blocos sidebar, full_width_content_before_main, modals, confirmation_messages
+   pois a página de cadastro geralmente não os necessita e foca no formulário. #}
+{% block sidebar %}{% endblock %}
+{% block full_width_content_before_main %}{% endblock %}
+{% block modals %}{% endblock %}
+{% block confirmation_messages %}{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h2>Criar Nova Conta</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" action="{% url 'mapa_app:signup' %}" novalidate> {# action é opcional aqui, mas bom para clareza #}
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <ul class="errorlist">
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <small class="helptext">{{ field.help_text|safe }}</small>
+                {% endif %}
+                {% for error in field.errors %}
+                    <ul class="errorlist"><li>{{ error }}</li></ul>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="submit-btn">Criar Conta</button>
+    </form>
+    <div class="auth-links">
+        <p>Já tem uma conta? <a href="{% url 'login' %}">Faça login aqui</a>.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_specific_scripts %}{% endblock %} {# Nenhum script JS específico para cadastro por enquanto #}
