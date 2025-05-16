@@ -14,22 +14,18 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+# project/project/urls.py
 from django.contrib import admin
 from django.urls import include, path
-from django.contrib.auth import views as auth_views # Views de autenticação do Django
-
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-    path('', include('contact.urls')),
+    # Linha para incluir as URLs do mapa_app na raiz do site
+    path('', include('mapa_app.urls')), # Faz o mapa ser a página inicial
+
+    # path('contact/', include('contact.urls')), # App 'contact' comentado ou em outro caminho
     path('admin/', admin.site.urls),
-   
-    # URLs de Autenticação
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
-    path('login/cadastro', auth_views.LoginView.as_view(template_name='registration/cadastro.html'), name='cadastro'),
-    
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'), # LogoutView usa next_page de LOGOUT_REDIRECT_URL
-    
-
-
-
+    # path('login/cadastro', ...), # Comentado
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 ]

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}  {# Diz ao Django para USAR o base_templates/base.html como esqueleto #}
+{% load static %}          {# Carrega as tags static para usar {% static '...' %} neste arquivo #}
+
+{# Preenchendo o bloco 'title' definido no base.html #}
+{% block title %}Mapa Interativo - {{ block.super }}{% endblock %} 
+{# {{ block.super }} inclui o título original do base.html, se desejado, ou pode remover. #}
+
+{# Preenchendo o bloco 'full_width_content_before_main' com a barra de busca global #}
+{% block full_width_content_before_main %}
+    <div class="global-search-container">
+        <div class="autoComplete_wrapper">
+            <input type="search" id="input-busca-global" placeholder="Pesquisar endereço ou coordenadas (ex: -23.532, -46.791)..." autocomplete="off">
+        </div>
+    </div>
+{% endblock %}
+
+{# Preenchendo o bloco 'sidebar' com a barra lateral #}
+{% block sidebar %}
+    <aside class="sidebar" id="menu-lateral" aria-hidden="true">
+        <!-- Conteúdo da sidebar será gerado dinamicamente pelo map.js -->
+        <div class="sidebar-header">Carregando Opções...</div>
+        <ul class="sidebar-content" role="menu"></ul>
+        <div class="sidebar-footer"></div>
+    </aside>
+{% endblock %}
+
+{# Preenchendo o bloco 'content' com o container do mapa e o botão FAB #}
+{% block content %}
+    <div id="mapa-container">
+        <!-- O mapa Leaflet será renderizado aqui pelo map.js -->
+    </div>
+
+    {% if user.is_authenticated %} {# Mostrar botão FAB apenas se o usuário estiver logado #}
+    <button id="fab-adicionar-pin" class="fab-add-pin" title="Cadastrar novo problema" aria-label="Cadastrar novo problema">
+        <i class="fas fa-plus" aria-hidden="true"></i>
+    </button>
+    {% endif %}
+{% endblock %}
+
+{# Preenchendo o bloco 'modals' com a estrutura do modal #}
+{% block modals %}
+    <div class="modal-overlay" id="overlay-modal">
+        <div class="modal-content" id="conteudo-modal" role="dialog" aria-modal="true">
+            <!-- Conteúdo do modal será gerado dinamicamente pelo map.js -->
+        </div>
+    </div>
+{% endblock %}
+
+{# Preenchendo o bloco 'confirmation_messages' com a estrutura da mensagem de confirmação #}
+{% block confirmation_messages %}
+    <div class="confirmation-message" id="div-mensagem-confirmacao" role="alert" aria-live="assertive">
+        <!-- Conteúdo da mensagem será gerado dinamicamente pelo map.js -->
+    </div>
+{% endblock %}
+
+{# Preenchendo o bloco 'page_specific_scripts' para carregar o map.js #}
+{% block page_specific_scripts %}
+    <script src="{% static 'global/js/map.js' %}"></script>
+    <script>
+        // Qualquer código JavaScript adicional específico para esta página pode ir aqui.
+        // O map.js já tem acesso às variáveis CSRF_TOKEN e USUARIO_LOGADO definidas no base.html.
+        console.log("MAPA_INTERATIVO.HTML: Script específico da página carregado.");
+    </script>
+{% endblock %}

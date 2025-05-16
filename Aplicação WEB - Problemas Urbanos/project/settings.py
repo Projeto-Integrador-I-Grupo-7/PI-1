@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'contact',
+    'mapa_app.apps.MapaAppConfig',
 ]
 
 MIDDLEWARE = [

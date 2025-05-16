@@ -7,20 +7,25 @@
     <title>{% block title %}Mapeamento Problemas Urbanos - Osasco-SP{% endblock %}</title>
     <meta name="description" content="Mapeamento colaborativo de problemas urbanos em Osasco-SP.">
 
+    <!-- Links CSS de bibliotecas externas (CDNs) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/css/autoComplete.min.css">
+    
+    <!-- Links para Fontes e Ícones (CDNs) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     
+    <!-- Seu CSS Personalizado Global -->
     <link rel="stylesheet" href="{% static 'global/css/style_index.css' %}">
 
+    <!-- Bloco para CSS específico da página filha (se necessário) -->
     {% block page_specific_css %}{% endblock %}
 </head>
 <body>
 
-
+    <!-- CABEÇALHO DO SITE -->
     <header class="app-header">
         <button class="menu-btn" id="botao-menu-lateral" aria-label="Abrir menu lateral" aria-expanded="false">
             <i class="fas fa-bars" aria-hidden="true"></i>
@@ -47,49 +52,64 @@
             {% endif %}
         </div>
     </header>
+    <!-- FIM DO CABEÇALHO DO SITE -->
 
+    <!-- Bloco para conteúdo que ocupa a largura total ANTES do wrapper principal (ex: barra de busca global) -->
     {% block full_width_content_before_main %}
+        <!-- Este bloco será preenchido pelo mapa_interativo.html com a barra de busca global -->
     {% endblock %}
 
-
+    <!-- ESTRUTURA PRINCIPAL DO CONTEÚDO DA PÁGINA -->
     <div class="content-wrapper">
+        
+        <!-- Bloco para a Sidebar (barra lateral) -->
         {% block sidebar %}
-        <!-- A sidebar virá aqui, preenchida pelo mapa_interativo.html -->
+            <!-- Este bloco será preenchido pelo mapa_interativo.html com a sidebar -->
         {% endblock %}
 
+        <!-- Conteúdo Principal da Página -->
         <main class="main-content">
+            <!-- Bloco para o conteúdo específico da página filha -->
             {% block content %}
-            <!-- O conteúdo principal da página (mapa-container) virá aqui, preenchido pelo mapa_interativo.html -->
+                <!-- Este é o "buraco" principal. O mapa_interativo.html colocará o mapa-container aqui. -->
             {% endblock %}
         </main>
-    </div>
+        <!-- FIM DO Conteúdo Principal da Página -->
 
+    </div>
+    <!-- FIM DA ESTRUTURA PRINCIPAL DO CONTEÚDO -->
+
+    <!-- RODAPÉ DO SITE -->
     <footer class="app-footer">
          <img src="{% static 'global/images/univesp_logo.png' %}" alt="Logo Univesp">
          <a href="{% url 'mapa_app:quem_somos' %}" style="text-decoration: none; color: inherit;"><span>Quem somos</span></a>
          <span>Grupo 7</span>
     </footer>
+    <!-- FIM DO RODAPÉ DO SITE -->
 
-
+    <!-- Bloco para Modais (janelas pop-up) -->
     {% block modals %}
-    <div class="modal-overlay" id="overlay-modal">
-        <div class="modal-content" id="conteudo-modal" role="dialog" aria-modal="true"></div>
-    </div>
+        <!-- Este bloco será preenchido pelo mapa_interativo.html com os modais -->
     {% endblock %}
 
+    <!-- Bloco para Mensagens de Confirmação -->
     {% block confirmation_messages %}
-    <div class="confirmation-message" id="div-mensagem-confirmacao" role="alert" aria-live="assertive"></div>
+        <!-- Este bloco será preenchido pelo mapa_interativo.html com as mensagens -->
     {% endblock %}
 
+    <!-- Scripts JavaScript de bibliotecas externas (CDNs) -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/autoComplete.min.js"></script>
     
+    <!-- Script para passar dados do Django para o JavaScript Frontend -->
     <script>
-        const CSRF_TOKEN = "{{ csrf_token }}";
-        const USUARIO_LOGADO = {{ user.is_authenticated|yesno:"true,false" }};
+        const CSRF_TOKEN = "{{ csrf_token }}"; // Importante para segurança em requisições POST
+        const USUARIO_LOGADO = {{ user.is_authenticated|yesno:"true,false" }}; // Informa ao JS se o usuário está logado
     </script>
 
+    <!-- Bloco para scripts JavaScript específicos da página filha (como o map.js) -->
     {% block page_specific_scripts %}
+        <!-- Este bloco será preenchido pelo mapa_interativo.html com o script map.js -->
     {% endblock %}
 
 </body>
