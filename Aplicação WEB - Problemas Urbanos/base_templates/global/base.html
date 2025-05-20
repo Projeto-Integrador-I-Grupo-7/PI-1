@@ -22,11 +22,10 @@
 
     <!-- Bloco para CSS específico da página filha (se necessário) -->
     {% block page_specific_css %}{% endblock %}
-</head>
-<body>
 
     <!-- CABEÇALHO DO SITE -->
     <header class="app-header">
+
         <button class="menu-btn" id="botao-menu-lateral" aria-label="Abrir menu lateral" aria-expanded="false">
             <i class="fas fa-bars" aria-hidden="true"></i>
         </button>
@@ -35,22 +34,26 @@
             <h1 class="app-title">Mapeamento Problemas Urbanos - Osasco-SP</h1>
         </a>
 
-        <div class="user-actions">
-            {% if user.is_authenticated %}
-                <button class="user-profile-btn" id="botao-perfil-usuario" aria-label="Opções do usuário" aria-haspopup="true" aria-expanded="false">
-                     <i class="fas fa-user-circle" aria-hidden="true"></i>
-                </button>
-                 <div class="user-dropdown" id="dropdown-usuario" style="display: none;" role="menu">
-                     <a href="{% url 'mapa_app:perfil_usuario' %}" role="menuitem">Meu cadastro</a> 
-                     <a href="{% url 'mapa_app:meus_pins' %}" role="menuitem">Meus pins</a>
-                     <hr>
-                     <a href="{% url 'logout' %}" id="botao-logout" role="menuitem">Sair</a>
-                 </div>
-            {% else %}
-                <a href="{% url 'login' %}" class="login-btn" id="link-login">Login</a>
-                <a href="{% url 'mapa_app:signup' %}" class="login-btn" style="margin-left: 10px;">Criar Conta</a>
-            {% endif %}
+    <div class="user-actions">
+    {# Opcional: Mantenha este debug por mais um teste se quiser #}
+    {# <p style="color: white; background: red; padding: 3px; font-size: 0.8em;">Auth: {{ user.is_authenticated }}</p> #}
+
+    {% if user.is_authenticated %}
+        <button class="user-profile-btn" id="botao-perfil-usuario" aria-label="Opções do usuário" aria-haspopup="true" aria-expanded="false">
+             <i class="fas fa-user-circle" aria-hidden="true"></i>
+        </button>
+        <div class="user-dropdown" id="dropdown-usuario" style="display: none;" role="menu"> <!-- display: none por padrão -->
+             <a href="{% url 'mapa_app:perfil_usuario' %}" role="menuitem">Meu cadastro</a> 
+             <a href="{% url 'mapa_app:meus_pins' %}" role="menuitem">Meus pins</a>
+             <hr>
+             <a href="{% url 'logout' %}" id="botao-logout" role="menuitem">Sair</a>
         </div>
+    {% else %}
+        <a href="{% url 'login' %}" class="login-btn" id="link-login">Login</a>
+        <a href="{% url 'mapa_app:signup' %}" class="login-btn" style="margin-left: 10px;">Criar Conta</a>
+    {% endif %}
+</div>
+
     </header>
     <!-- FIM DO CABEÇALHO DO SITE -->
 

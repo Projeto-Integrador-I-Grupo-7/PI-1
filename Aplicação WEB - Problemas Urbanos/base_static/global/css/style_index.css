@@ -27,6 +27,7 @@ body { font-family: 'Roboto', sans-serif; display: flex; flex-direction: column;
   min-height: 0; /* Para permitir encolher se necessário em layouts flex */
   z-index: 500;
   background-color: #eee;
+  height: 100%; /* Para garantir que o mapa ocupe todo o espaço */
   
 }
 
@@ -165,7 +166,27 @@ body { font-family: 'Roboto', sans-serif; display: flex; flex-direction: column;
 .confirmation-message.show { display: block; opacity: 1;}
 .confirmation-message i { margin-left: 8px; }
 /* Botão Flutuante (FAB) */
-.fab-add-pin { position: absolute; bottom: 30px; right: 30px; width: 56px; height: 56px; background-color: var(--light-blue); color: white; border: none; border-radius: 50%; font-size: 24px; line-height: 56px; text-align: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); cursor: pointer; transition: background-color 0.2s ease, transform 0.1s ease, display 0s linear 0.1s; z-index: 990; display: none; }
+.fab-add-pin {
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    width: 56px;
+    height: 56px;
+    background-color: var(--light-blue);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 24px;
+    /* line-height: 56px; */ /* Removido ou ajustado se usar flex */
+    /* text-align: center; */ /* Removido ou ajustado se usar flex */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease; 
+    z-index: 990;
+    display: flex; AQUI */
+    align-items: center;  
+    justify-content: center; 
+}
 .fab-add-pin:hover { background-color: #0069d9; }
 .fab-add-pin:active { transform: scale(0.95); }
 
