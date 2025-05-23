@@ -1,0 +1,108 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title|default:"Meu Cadastro" }} - {{ block.super }}{% endblock %}
+
+{% block page_specific_css %}
+<style>
+    .profile-container {
+        max-width: 700px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .profile-container h1 {
+        color: var(--primary-color-dark, #004488);
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid var(--primary-color-light, #e6f0ff);
+        padding-bottom: 0.5rem;
+    }
+    .profile-details dt {
+        font-weight: bold;
+        color: var(--text-color-dark, #212529);
+        margin-top: 1rem;
+    }
+    .profile-details dd {
+        margin-left: 0;
+        margin-bottom: 1rem;
+        color: var(--text-color-medium, #495057);
+        padding: 0.5rem;
+        background-color: var(--background-grey, #f8f9fa);
+        border-radius: var(--border-radius-small);
+    }
+    .profile-actions {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color-light, #e9ecef);
+        text-align: right; /* Alinha botões à direita */
+    }
+    .profile-actions .btn {
+        padding: 0.6rem 1.2rem;
+        text-decoration: none;
+        border-radius: var(--border-radius-medium);
+        font-weight: 500;
+        transition: background-color 0.2s, color 0.2s;
+        margin-left: 0.5rem; /* Espaço entre botões */
+    }
+    .btn-primary-action { /* Reutilizando classe do base.html ou definindo aqui */
+        background-color: var(--light-blue, #007bff);
+        color: white;
+        border: 1px solid var(--light-blue, #007bff);
+    }
+    .btn-primary-action:hover {
+        background-color: var(--primary-color-dark, #0056b3);
+        border-color: var(--primary-color-dark, #0056b3);
+    }
+    .btn-secondary-action { /* Reutilizando classe do base.html ou definindo aqui */
+        background-color: transparent;
+        color: var(--secondary-color, #6c757d);
+        border: 1px solid var(--secondary-color, #6c757d);
+    }
+    .btn-secondary-action:hover {
+        background-color: var(--secondary-color, #6c757d);
+        color: white;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <h1>{{ page_title|default:"Meu Cadastro" }}</h1>
+
+    {% if usuario_atual %}
+        <dl class="profile-details">
+            <dt>Nome de Usuário:</dt>
+            <dd>{{ usuario_atual.username }}</dd>
+
+            <dt>Nome:</dt>
+            <dd>{{ usuario_atual.first_name|default:"Não informado" }}</dd>
+
+            <dt>Sobrenome:</dt>
+            <dd>{{ usuario_atual.last_name|default:"Não informado" }}</dd>
+
+            <dt>E-mail:</dt>
+            <dd>{{ usuario_atual.email }}</dd>
+
+            <dt>Data de Cadastro:</dt>
+            <dd>{{ usuario_atual.date_joined|date:"d/m/Y H:i" }}</dd>
+
+            {% if usuario_atual.last_login %}
+            <dt>Último Login:</dt>
+            <dd>{{ usuario_atual.last_login|date:"d/m/Y H:i" }}</dd>
+            {% endif %}
+        </dl>
+
+        <div class="profile-actions">
+            <!-- Links para futuras funcionalidades de edição -->
+            <!-- <a href="#" class="btn btn-primary-action">Editar Informações</a> -->
+            <!-- <a href="#" class="btn btn-secondary-action">Alterar Senha</a> -->
+            <p style="text-align:left; font-size:0.9em; color: #666;"><em>Funcionalidades de edição e alteração de senha serão implementadas em breve.</em></p>
+        </div>
+    {% else %}
+        <p>Não foi possível carregar as informações do usuário.</p>
+    {% endif %}
+</div>
+{% endblock %}

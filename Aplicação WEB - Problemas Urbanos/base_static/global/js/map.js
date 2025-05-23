@@ -1,331 +1,906 @@
-// Arquivo: base_static/global/js/map.js
+// Arquivo: base_static/global/js/map.js (ou onde estiver seu map.js)
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("MAP.JS: DOMContentLoaded disparado.");
-  
-    let leafletMapInstance = null; // Nome da instância global do mapa Leaflet
-  
-    // --- Constantes da Aplicação ---
-    const TIPOS_PROBLEMAS = [
-      {id: 'lixo', nome: 'Acúmulo de lixo', iconeFa: 'fa-trash-alt'},
-      {id: 'alagamento', nome: 'Alagamento', iconeFa: 'fa-water'},
-      {id: 'sinalizacao', nome: 'Problema de Sinalização', iconeFa: 'fa-traffic-light'},
-      {id: 'buraco', nome: 'Buraco na Via', iconeFa: 'fa-road-circle-xmark'},
-      {id: 'congestionamento', nome: 'Congestionamento/Trânsito', iconeFa: 'fa-car-burst'},
-      {id: 'deslizamento', nome: 'Risco de Deslizamento', iconeFa: 'fa-house-flood-water'},
-      {id: 'esgoto', nome: 'Esgoto a Céu Aberto', iconeFa: 'fa-biohazard'},
-      {id: 'iluminacao', nome: 'Falha na Iluminação Pública', iconeFa: 'fa-lightbulb-slash'},
-      {id: 'violencia', nome: 'Local com Ocorrência de Violência', iconeFa: 'fa-shield-halved'},
-      {id: 'outros', nome: 'Outros Problemas', iconeFa: 'fa-question-circle'}
-    ];
-  
-    const STATUS_PROBLEMAS = {
-      pendente: { nome: 'Pendente', cor: '#ffc107' },
-      em_andamento: { nome: 'Em Andamento', cor: '#17a2b8' },
-      solucionado: { nome: 'Solucionado', cor: '#28a745' }
-    };
-  
-    // --- 1. INICIALIZAÇÃO DO MAPA ---
-    try {
-        const containerMapa = document.getElementById('mapa-container');
-        if (!containerMapa) throw new Error("ERRO CRÍTICO: Elemento HTML com id='mapa-container' não encontrado!");
-        leafletMapInstance = L.map('mapa-container', { zoomControl: true }).setView([-23.5329, -46.7917], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© Contribuidores do <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>',
-            maxZoom: 19, minZoom: 11
-        }).addTo(leafletMapInstance);
-        console.log("Mapa e tiles carregados com SUCESSO.");
-        inicializarAplicacao();
-    } catch (erro) {
-        console.error("!!!!!!!! FALHA GRAVE AO INICIALIZAR O MAPA !!!!!!!!", erro);
-        const container = document.getElementById('mapa-container');
-        const errorMsg = '<p style="color: red; padding: 20px; text-align: center; font-weight: bold;">Erro ao carregar o mapa. Verifique o console (F12).</p>';
-        const criticalErrorMsg = '<p style="color: red; padding: 20px;">Erro crítico: Container do mapa não encontrado.</p>';
-        if (container) container.innerHTML = errorMsg;
-        else if(document.body) document.body.innerHTML = criticalErrorMsg; // Fallback
+
+    // Configurações globais da aplicação (CSRF, status de login, etc.)
+    const { CSRF_TOKEN, USUARIO_LOGADO, USERNAME, URLS } = window.APP_CONFIG ||
+        { CSRF_TOKEN: '', USUARIO_LOGADO: false, USERNAME: 'Visitante', URLS: { listarProblemas: '', registrarProblema: '' } };
+
+    const URL_LISTAR_PROBLEMAS = URLS.listarProblemas;
+    const URL_REGISTRAR_PROBLEMA = URLS.registrarProblema;
+
+
+    // Verifica se a biblioteca Leaflet está carregada
+    if (typeof L === 'undefined') {
+        console.error("Biblioteca Leaflet não está carregada. O mapa não pode ser inicializado.");
+        const mapContainerError = document.getElementById('mapa-container') || document.body;
+        if (mapContainerError) {
+            mapContainerError.innerHTML = '<p style="color:red;text-align:center;padding:2rem;font-size:1.2rem;">Erro Crítico: Biblioteca de mapa (Leaflet) não foi carregada.</p>';
+        }
         return;
     }
-  
-    // --- Função Principal ---
-    function inicializarAplicacao() {
-        console.log("JS: Inicializando aplicação...");
 
-        const estaLogado = typeof USUARIO_LOGADO !== 'undefined' ? USUARIO_LOGADO : false;
-        console.log("JS: Em inicializarAplicacao, estaLogado é:", estaLogado);
+    // Variáveis globais do módulo do mapa
+    let leafletMapInstance = null;
+    let instanciaAutocompleteGlobal = null;
+    let marcadorBuscaTemporario = null;
+    let idTimeoutMensagemGlobal = null;
 
-        let problemasCarregados = [];
-        let camadaMarcadores = L.featureGroup().addTo(leafletMapInstance);
-        let modoCadastroPinAtivo = false;
-        let marcadorTemporario = null;
-        let dadosNovoPin = {};
-        let instanciaAutocompleteGlobal = null;
+    let modoCadastroPinAtivo = false;
+    let overlayModalEl = null;
+
+    // Constantes de configuração
+    const TIPOS_PROBLEMAS = [
+        { id: 'lixo', nome: 'Acúmulo de Lixo', iconeFa: 'fa-trash-can', cor: '#795548' },
+        { id: 'alagamento', nome: 'Ponto de Alagamento', iconeFa: 'fa-house-flood-water', cor: '#2196F3' },
+        { id: 'sinalizacao', nome: 'Falha de Sinalização', iconeFa: 'fa-traffic-light', cor: '#FF9800' },
+        { id: 'buraco', nome: 'Buraco na Via', iconeFa: 'fa-road-circle-xmark', cor: '#607D8B' },
+        { id: 'congestionamento', nome: 'Congestionamento Frequente', iconeFa: 'fa-car-burst', cor: '#F44336' },
+        { id: 'deslizamento', nome: 'Risco de Deslizamento', iconeFa: 'fa-mountain-sun', cor: '#A1887F' },
+        { id: 'esgoto', nome: 'Esgoto a Céu Aberto', iconeFa: 'fa-biohazard', cor: '#4CAF50' },
+        { id: 'iluminacao', nome: 'Iluminação Pública Deficiente', iconeFa: 'fa-lightbulb', cor: '#FFEB3B' },
+        { id: 'violencia', nome: 'Local com Ocorrência de Violência', iconeFa: 'fa-shield-halved', cor: '#E91E63' },
+        { id: 'outros', nome: 'Outros Problemas', iconeFa: 'fa-circle-question', cor: '#9E9E9E' }
+    ];
+    const STATUS_PROBLEMAS_INFO = { // Renomeado para evitar conflito com variável global
+        pendente: { nome: 'Pendente', corCssVar: 'var(--warning-color)', iconeFa: 'fa-hourglass-half' },
+        em_analise: { nome: 'Em Análise', corCssVar: 'var(--info-color)', iconeFa: 'fa-magnifying-glass' },
+        em_andamento: { nome: 'Em Andamento', corCssVar: 'var(--info-color)', iconeFa: 'fa-person-digging' },
+        solucionado: { nome: 'Solucionado', corCssVar: 'var(--success-color)', iconeFa: 'fa-check-circle' },
+        recusado: { nome: 'Recusado/Inválido', corCssVar: 'var(--danger-color)', iconeFa: 'fa-ban' }
+    };
+    const iconePadraoLeaflet = L.icon({
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], tooltipAnchor: [16, -28], shadowSize: [41, 41]
+    });
+
+    
+        console.log("JS: Atalho de teclado (VERSÃO COMPLETA COM LOGS) 'Espaço' para novo pin configurado.");
+    
+
+    function inicializarMapaEApp() {
+        try {
+            const containerMapa = document.getElementById('mapa-container');
+            if (!containerMapa) { console.error("Elemento HTML com id='mapa-container' não encontrado!"); return; }
+
+            leafletMapInstance = L.map('mapa-container', { zoomControl: false }).setView([-23.5329, -46.7917], 13); // Coordenadas de Osasco
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© Contribuidores do <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>',
+                maxZoom: 19, minZoom: 10
+            }).addTo(leafletMapInstance);
+            L.control.zoom({ position: 'bottomright' }).addTo(leafletMapInstance);
+            console.log("Mapa Leaflet e tiles carregados com SUCESSO.");
+            inicializarLogicaAplicacao();
+        } catch (erro) {
+            console.error("FALHA CRÍTICA AO INICIALIZAR O MAPA LEAFLET:", erro.message, erro.stack);
+            const errorDisplayContainer = document.getElementById('mapa-container') || document.body;
+            if (errorDisplayContainer) {
+                errorDisplayContainer.innerHTML = `<p style="color: red; padding: 2rem; text-align: center;">Erro crítico ao carregar o mapa.</p>`;
+            }
+        }
+    }
+
+    function criarElemento(tag, { classes = [], atributos = {}, texto = '', htmlInterno = '' } = {}) {
+        const el = document.createElement(tag);
+        if (classes.length > 0) el.classList.add(...classes.filter(c => c));
+        for (const [attr, valor] of Object.entries(atributos)) { el.setAttribute(attr, valor); }
+        if (texto) el.textContent = texto;
+        if (htmlInterno) el.innerHTML = htmlInterno;
+        return el;
+    }
+
+    let ultimoElementoFocado = null;
+
+    function inicializarLogicaAplicacao() {
+        console.log("JS: Inicializando lógica principal da aplicação...");
 
         const menuLateralEl = document.getElementById('menu-lateral');
         const botaoMenuLateralEl = document.getElementById('botao-menu-lateral');
         const botaoPerfilUsuarioEl = document.getElementById('botao-perfil-usuario');
         const dropdownUsuarioEl = document.getElementById('dropdown-usuario');
-        const overlayModalEl = document.getElementById('overlay-modal');
+        overlayModalEl = document.getElementById('overlay-modal');
         const conteudoModalEl = document.getElementById('conteudo-modal');
-        const divMensagemConfirmacaoEl = document.getElementById('div-mensagem-confirmacao');
+        const corpoModalEl = conteudoModalEl ? conteudoModalEl.querySelector('.modal-body-content') : null;
+        const tituloModalEl = conteudoModalEl ? conteudoModalEl.querySelector('#modal-title') : null;
+        const botaoFecharModalEl = conteudoModalEl ? conteudoModalEl.querySelector('.modal-close-btn') : null;
+        const containerMensagensGlobaisEl = document.querySelector('.global-message-container');
         const fabAdicionarPinEl = document.getElementById('fab-adicionar-pin');
         const inputBuscaGlobalEl = document.getElementById('input-busca-global');
+        const searchInputGroupEl = inputBuscaGlobalEl ? inputBuscaGlobalEl.closest('.search-input-group') : null;
+        const searchSubmitBtnEl = searchInputGroupEl ? searchInputGroupEl.querySelector('.search-submit-btn') : null;
 
-        const iconePadraoLeaflet = L.icon({ iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png', iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], tooltipAnchor: [16, -28], shadowSize: [41, 41] });
 
-        // --- DEFINIÇÕES DE FUNÇÕES ---
-        const abrirModal = () => { if (overlayModalEl) overlayModalEl.classList.add('active'); };
-        const fecharModal = () => { if (overlayModalEl) overlayModalEl.classList.remove('active'); if (conteudoModalEl) conteudoModalEl.innerHTML = ''; };
-        const mostrarMensagemConfirmacao = (mensagem) => { if (!divMensagemConfirmacaoEl) return; divMensagemConfirmacaoEl.innerHTML = `${mensagem} <i class="fas fa-check" aria-hidden="true"></i>`; divMensagemConfirmacaoEl.classList.add('show'); setTimeout(() => divMensagemConfirmacaoEl.classList.remove('show'), 3500); };
-        const fecharMenuLateral = () => { if (menuLateralEl) menuLateralEl.classList.remove('open'); if (botaoMenuLateralEl) botaoMenuLateralEl.setAttribute('aria-expanded', 'false'); };
-        
+
+        let problemasCarregados = []; // Vai armazenar os problemas buscados da API
+        let camadaMarcadores = null;
+        if (leafletMapInstance) {
+            camadaMarcadores = L.featureGroup().addTo(leafletMapInstance);
+        } else {
+            console.error("JS: Instância do mapa não disponível para adicionar camada de marcadores.");
+            return; // Não continuar se o mapa não existe
+        }
+        modoCadastroPinAtivo = false;
+        let marcadorTemporario = null;
+        let dadosNovoPin = {};
+
+        const mostrarMensagemGlobal = (mensagem, tipo = 'confirmacao', duracao = 4000) => {
+            if (!containerMensagensGlobaisEl) {
+                console.warn("JS Aviso: Container de mensagens globais não encontrado. Usando alert.");
+                alert(`${tipo.toUpperCase()}: ${mensagem}`);
+                return;
+            }
+            clearTimeout(idTimeoutMensagemGlobal);
+            let classesMsg = ['confirmation-message'], iconeClasse = 'fa-check-circle';
+            if (tipo === 'erro') { classesMsg = ['error-message']; iconeClasse = 'fa-times-circle'; }
+            else if (tipo === 'info') { classesMsg = ['info-message']; iconeClasse = 'fa-info-circle'; }
+            else if (tipo === 'aviso') { classesMsg = ['warning-message']; iconeClasse = 'fa-exclamation-triangle'; } // Adicionado tipo aviso
+            const divMensagem = criarElemento('div', { classes: classesMsg, atributos: { role: 'alert', 'aria-live': 'assertive' }, htmlInterno: `<i class="fas ${iconeClasse}" aria-hidden="true"></i> <span>${mensagem}</span>` });
+            containerMensagensGlobaisEl.appendChild(divMensagem);
+            requestAnimationFrame(() => requestAnimationFrame(() => divMensagem.classList.add('show')));
+            idTimeoutMensagemGlobal = setTimeout(() => {
+                divMensagem.classList.remove('show');
+                divMensagem.addEventListener('transitionend', function handle() { if (divMensagem.parentNode) divMensagem.remove(); divMensagem.removeEventListener('transitionend', handle); }, { once: true });
+                setTimeout(() => { if (divMensagem.parentNode) divMensagem.remove(); }, 500); // Fallback
+            }, duracao);
+        };
+
+        const abrirModalComConteudo = (titulo, html, { focusNoPrimeiroInput = true } = {}) => {
+            if (!overlayModalEl || !corpoModalEl || !tituloModalEl) { console.error("JS Erro: Elementos do modal não encontrados."); return; }
+            ultimoElementoFocado = document.activeElement;
+            tituloModalEl.textContent = titulo;
+            corpoModalEl.innerHTML = html;
+            overlayModalEl.classList.add('active');
+            overlayModalEl.setAttribute('aria-hidden', 'false');
+            conteudoModalEl.setAttribute('tabindex', '-1'); // Torna o modal focável
+            if (focusNoPrimeiroInput) {
+                const focavel = corpoModalEl.querySelector('input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), button:not([disabled]), select:not([disabled]), a[href]');
+                if (focavel) focavel.focus();
+                else if (botaoFecharModalEl) botaoFecharModalEl.focus();
+                else if (conteudoModalEl) conteudoModalEl.focus();
+            } else if (conteudoModalEl) {
+                conteudoModalEl.focus(); // Foca no próprio modal se não for para focar em input
+            }
+        };
+        const fecharModal = () => {
+            if (!overlayModalEl) return;
+            overlayModalEl.classList.remove('active');
+            overlayModalEl.setAttribute('aria-hidden', 'true');
+            if (corpoModalEl) corpoModalEl.innerHTML = '';
+            if (tituloModalEl) tituloModalEl.textContent = 'Janela Modal'; // Reset título
+            if (ultimoElementoFocado) { ultimoElementoFocado.focus(); ultimoElementoFocado = null; }
+        };
+        if (botaoFecharModalEl) botaoFecharModalEl.addEventListener('click', fecharModal);
+
         let idTimeoutMensagemMapa = null;
-        const esconderMensagemTemporaria = () => {
+        const esconderMensagemTemporariaMapa = () => {
             clearTimeout(idTimeoutMensagemMapa);
-            const divMensagem = document.getElementById('mensagem-mapa-temporaria');
-            if (divMensagem) divMensagem.remove();
+            const msgEl = document.getElementById('mensagem-mapa-temporaria');
+            if (msgEl) msgEl.remove();
         };
-        const mostrarMensagemTemporaria = (texto) => {
-            esconderMensagemTemporaria();
-            const divMensagem = document.createElement('div');
-            divMensagem.id = 'mensagem-mapa-temporaria';
-            divMensagem.style.cssText = `position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background-color: rgba(0,0,0,0.75); color: white; padding: 10px 20px; border-radius: 5px; z-index: 1001; pointer-events: none; text-align: center; font-size: 0.9em; box-shadow: 0 2px 5px rgba(0,0,0,0.2);`;
-            divMensagem.textContent = texto;
+        const mostrarMensagemTemporariaMapa = (texto, duracao = 4000) => {
+            if (!leafletMapInstance) return;
+            esconderMensagemTemporariaMapa();
+            const msgEl = criarElemento('div', { atributos: { id: 'mensagem-mapa-temporaria' }, texto: texto });
+            msgEl.style.cssText = "position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background-color: rgba(33,37,41,0.9); color: white; padding: 0.75rem 1.25rem; border-radius: var(--border-radius-medium); z-index: 1010; pointer-events: none; text-align: center; font-size: 0.9rem; box-shadow: var(--shadow-md); transition: opacity 0.3s ease-out; opacity: 0;";
             const mapContainer = leafletMapInstance.getContainer();
-            if(mapContainer) mapContainer.appendChild(divMensagem);
-            idTimeoutMensagemMapa = setTimeout(esconderMensagemTemporaria, 4000);
+            if (mapContainer) mapContainer.appendChild(msgEl);
+            requestAnimationFrame(() => requestAnimationFrame(() => { msgEl.style.opacity = '1'; }));
+            idTimeoutMensagemMapa = setTimeout(() => {
+                if (msgEl.parentNode) { // Verifica se ainda está no DOM
+                    msgEl.style.opacity = '0';
+                    msgEl.addEventListener('transitionend', esconderMensagemTemporariaMapa, { once: true });
+                }
+            }, duracao);
         };
 
-        const pararRegistroPin = () => {
+        const pararRegistroPin = (canceladoPeloUsuario = false) => {
             modoCadastroPinAtivo = false;
-            const mapContainer = leafletMapInstance.getContainer();
-            if(mapContainer) mapContainer.style.cursor = '';
-            if (marcadorTemporario) { leafletMapInstance.removeLayer(marcadorTemporario); marcadorTemporario = null; }
+            if (leafletMapInstance) {
+                const mapContainer = leafletMapInstance.getContainer();
+                if (mapContainer) mapContainer.style.cursor = '';
+                if (marcadorTemporario) { leafletMapInstance.removeLayer(marcadorTemporario); marcadorTemporario = null; }
+            }
             dadosNovoPin = {};
             fecharModal();
-            esconderMensagemTemporaria();
-            const itemCadSidebar = document.getElementById('item-cadastrar-pin-sidebar');
-            if (itemCadSidebar) itemCadSidebar.classList.remove('active-registration');
-            console.log("JS: MODO CADASTRO DESATIVADO.");
+            esconderMensagemTemporariaMapa();
+            const itemSidebar = menuLateralEl ? menuLateralEl.querySelector('#item-cadastrar-pin-sidebar') : null;
+            if (itemSidebar) itemSidebar.classList.remove('active-registration');
+            if (canceladoPeloUsuario) mostrarMensagemGlobal("Cadastro de problema cancelado.", "info");
         };
+
         const iniciarRegistroPin = () => {
-            if (!estaLogado) { console.warn("Usuário não logado, não pode iniciar cadastro."); return; }
-            if (modoCadastroPinAtivo) { console.log("Modo cadastro já ativo."); return; }
+            if (!USUARIO_LOGADO) { mostrarMensagemGlobal("Você precisa estar logado para cadastrar um problema.", "erro"); return; }
+            if (modoCadastroPinAtivo) { mostrarMensagemTemporariaMapa("Modo de cadastro de problema já está ativo."); return; }
             modoCadastroPinAtivo = true;
-            const mapContainer = leafletMapInstance.getContainer();
-            if(mapContainer) mapContainer.style.cursor = 'crosshair';
-            dadosNovoPin = {};
+            if (leafletMapInstance) { const c = leafletMapInstance.getContainer(); if (c) c.style.cursor = 'crosshair'; }
+            dadosNovoPin = {}; // Resetar dados do pin
             if (marcadorTemporario) { leafletMapInstance.removeLayer(marcadorTemporario); marcadorTemporario = null; }
-            const itemCadSidebar = document.getElementById('item-cadastrar-pin-sidebar');
-            if (itemCadSidebar) itemCadSidebar.classList.add('active-registration');
-            console.log("JS: MODO CADASTRO ATIVADO.");
+            const itemSidebar = menuLateralEl ? menuLateralEl.querySelector('#item-cadastrar-pin-sidebar') : null;
+            if (itemSidebar) itemSidebar.classList.add('active-registration');
+            mostrarMensagemTemporariaMapa("Clique no mapa para marcar o local do problema.");
         };
+
         const iniciarInstrucaoCadastroPin = () => {
-           if (!estaLogado) { alert("Faça login para cadastrar um problema."); return; }
-           if (modoCadastroPinAtivo) {
-               console.log("Modo cadastro já ativo. Clique no mapa.");
-               mostrarMensagemTemporaria("Modo de cadastro já ativo. Clique no mapa.");
-               return;
-           }
-           iniciarRegistroPin();
-           mostrarMensagemTemporaria("Clique no mapa para marcar o local do problema.");
+            if (!USUARIO_LOGADO) { mostrarMensagemGlobal("Faça login ou crie uma conta para cadastrar problemas.", "info"); return; }
+            if (menuLateralEl && menuLateralEl.classList.contains('visible')) fecharMenuLateralDropdown();
+            iniciarRegistroPin();
         };
-        async function mostrarConfirmacaoEndereco(coords, abrirSeNaoEstiverAberto = true) {
-            dadosNovoPin.latitude = coords.lat;
-            dadosNovoPin.longitude = coords.lng;
-            let enderecoEstimado = `Lat: ${coords.lat.toFixed(5)}, Lng: ${coords.lng.toFixed(5)}`;
-            const urlNominatim = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${coords.lat}&lon=${coords.lng}&accept-language=pt-BR`;
+
+        async function mostrarConfirmacaoEndereco(latlng, novoMarcador = true) {
+            dadosNovoPin.latitude = latlng.lat;
+            dadosNovoPin.longitude = latlng.lng;
+            let enderecoDetectado = `Lat: ${latlng.lat.toFixed(5)}, Lng: ${latlng.lng.toFixed(5)}`; // Fallback
+
+            // Tenta buscar endereço via Nominatim
+            const urlNominatim = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latlng.lat}&lon=${latlng.lng}&accept-language=pt-BR&zoom=18`;
             try {
-                const response = await fetch(urlNominatim);
-                const data = await response.json();
-                if (data && data.display_name) { enderecoEstimado = data.display_name; }
-            } catch (e) { console.error('Erro ao buscar endereço (Nominatim):', e); }
-            finally {
-                dadosNovoPin.enderecoTexto = enderecoEstimado;
-                if(conteudoModalEl) conteudoModalEl.innerHTML = `<h2>Confirme o Local do Problema:</h2><p style="font-size: 0.95em; margin-bottom: 15px; padding: 10px; background-color: #f0f0f0; border-radius: 4px;">${enderecoEstimado}</p><p style="font-size:0.85em; color: #555;">Você pode arrastar o marcador no mapa para ajustar.</p><div class="modal-actions"><button type="button" class="cancel-btn" id="btnCancEnd">Cancelar</button><button type="button" class="confirm-btn" id="btnConfEnd">Avançar →</button></div>`;
-                const btnConfirmarEndereco = document.getElementById('btnConfEnd');
-                const btnCancelarEndereco = document.getElementById('btnCancEnd');
-                if (btnConfirmarEndereco) btnConfirmarEndereco.onclick = mostrarSelecaoTipoProblema;
-                if (btnCancelarEndereco) btnCancelarEndereco.onclick = () => { pararRegistroPin(); fecharModal(); };
-                if (abrirSeNaoEstiverAberto || (overlayModalEl && !overlayModalEl.classList.contains('active'))) { abrirModal(); }
+                const respostaNominatim = await fetch(urlNominatim);
+                if (!respostaNominatim.ok) throw new Error(`Nominatim status: ${respostaNominatim.status}`);
+                const dadosNominatim = await respostaNominatim.json();
+                if (dadosNominatim && dadosNominatim.display_name) {
+                    enderecoDetectado = dadosNominatim.display_name;
+                }
+            } catch (e) {
+                console.warn('Erro ao buscar endereço (Nominatim):', e.message);
+                mostrarMensagemGlobal("Não foi possível obter o nome do endereço. Usando coordenadas.", "aviso", 2000);
+            }
+            dadosNovoPin.enderecoTexto = enderecoDetectado;
+
+            const htmlModal = `
+                <p id="endereco-preview-modal" class="address-preview" style="margin-bottom: 10px; font-weight:500;">${enderecoDetectado}</p>
+                <p class="help-text" style="font-size:0.9em; color: #666;">Se necessário, arraste o marcador no mapa para ajustar a localização.</p>
+                <div class="modal-actions" style="margin-top:20px;">
+                    <button class="secondary-btn" id="btnCancEndModal">Cancelar</button>
+                    <button class="confirm-btn" id="btnConfEndModal">Avançar <i class="fas fa-arrow-right"></i></button>
+                </div>`;
+            abrirModalComConteudo("Confirmar Localização do Problema", htmlModal, { focusNoPrimeiroInput: false });
+
+            const btnConf = document.getElementById('btnConfEndModal');
+            const btnCanc = document.getElementById('btnCancEndModal');
+            if (btnConf) btnConf.focus(); // Foca no botão de confirmar
+
+            if (btnConf) btnConf.addEventListener('click', mostrarSelecaoTipoProblema, { once: true });
+            if (btnCanc) btnCanc.addEventListener('click', () => pararRegistroPin(true), { once: true });
+        }
+
+        function mostrarSelecaoTipoProblema() {
+            let tiposHtml = TIPOS_PROBLEMAS.map(t => `
+                <li>
+                    <label>
+                        <input type="radio" name="tipoProblema" value="${t.id}" ${dadosNovoPin.tipo_problema === t.id ? "checked" : ""}>
+                        <i class="fas ${t.iconeFa} fa-fw" style="color:${t.cor}; margin-right: 8px;"></i> ${t.nome}
+                    </label>
+                </li>`).join('');
+            const htmlModal = `
+                <ul class="problem-type-list" style="list-style:none; padding:0; margin:0 0 20px 0;">${tiposHtml}</ul>
+                <div class="modal-actions">
+                    <button class="secondary-btn" id="btnVoltTipoModal"><i class="fas fa-arrow-left"></i> Voltar</button>
+                    <button class="confirm-btn" id="btnConfTipoModal">Avançar <i class="fas fa-arrow-right"></i></button>
+                </div>`;
+            abrirModalComConteudo("Qual o Tipo de Problema?", htmlModal);
+
+            const primeiroRadio = corpoModalEl.querySelector('input[name="tipoProblema"]');
+            if (primeiroRadio) primeiroRadio.focus();
+
+            document.getElementById('btnConfTipoModal')?.addEventListener('click', () => {
+                const tipoSelecionado = document.querySelector('input[name="tipoProblema"]:checked');
+                if (tipoSelecionado) {
+                    dadosNovoPin.tipo_problema = tipoSelecionado.value;
+                    mostrarDescricaoProblema();
+                } else {
+                    mostrarMensagemGlobal('Por favor, selecione o tipo do problema.', 'erro');
+                }
+            }, { once: true });
+            document.getElementById('btnVoltTipoModal')?.addEventListener('click', () => mostrarConfirmacaoEndereco(L.latLng(dadosNovoPin.latitude, dadosNovoPin.longitude), false), { once: true });
+        }
+
+        function mostrarDescricaoProblema() {
+            const descricaoAtual = dadosNovoPin.descricao || '';
+            const htmlModal = `
+                <div style="margin-bottom: 15px;">
+                    <label for="input-descricao-problema" style="display:block; margin-bottom:5px; font-weight:500;">Descrição (opcional):</label>
+                    <textarea id="input-descricao-problema" rows="4" placeholder="Forneça mais detalhes sobre o problema..." style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">${descricaoAtual}</textarea>
+                </div>
+                <div class="modal-actions">
+                    <button class="secondary-btn" id="btnVoltDescModal"><i class="fas fa-arrow-left"></i> Voltar</button>
+                    <button class="confirm-btn" id="btnSubmeterModal">Concluir Cadastro <i class="fas fa-check-circle"></i></button>
+                </div>`;
+            abrirModalComConteudo("Detalhes Adicionais do Problema", htmlModal);
+            document.getElementById('input-descricao-problema')?.focus();
+
+            document.getElementById('btnSubmeterModal')?.addEventListener('click', () => {
+                dadosNovoPin.descricao = document.getElementById('input-descricao-problema')?.value.trim() || '';
+                submeterRelatorioProblema();
+            }, { once: true });
+            document.getElementById('btnVoltDescModal')?.addEventListener('click', mostrarSelecaoTipoProblema, { once: true });
+        }
+
+        async function submeterRelatorioProblema() {
+            // Validação básica no frontend (a validação principal é no backend)
+            if (!dadosNovoPin.latitude || !dadosNovoPin.longitude || !dadosNovoPin.tipo_problema) {
+                mostrarMensagemGlobal("Dados essenciais (localização, tipo) estão faltando.", "erro");
+                pararRegistroPin();
+                return;
+            }
+
+            fecharModal();
+            mostrarMensagemGlobal("Registrando problema...", "info", 15000);
+
+            const dadosParaEnviar = {
+                latitude: dadosNovoPin.latitude,
+                longitude: dadosNovoPin.longitude,
+                tipo_problema: dadosNovoPin.tipo_problema, // Esta é a CHAVE (ex: 'lixo')
+                descricao: dadosNovoPin.descricao,
+                enderecoTexto: dadosNovoPin.enderecoTexto
+            };
+
+            // A linha que causa o erro está aqui ou antes desta função,
+            // se ela tentar validar 'tipo_problema' usando 'Problema.TIPO_PROBLEMA_CHOICES'
+            // O JavaScript NÃO DEVE tentar acessar Problema.TIPO_PROBLEMA_CHOICES.
+            // A validação do tipo_problema é feita no BACKEND.
+
+            try {
+                const response = await fetch(URL_REGISTRAR_PROBLEMA, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': CSRF_TOKEN
+                    },
+                    body: JSON.stringify(dadosParaEnviar)
+                });
+
+                const resultado = await response.json();
+
+                if (response.ok && resultado.success) {
+                    mostrarMensagemGlobal(`Problema "${resultado.problema.tipo_display}" cadastrado com sucesso!`, "confirmacao");
+                    adicionarMarcadorProblema(resultado.problema);
+                    if (problemasCarregados && Array.isArray(problemasCarregados)) { // Verifica se problemasCarregados existe e é um array
+                        problemasCarregados.push(resultado.problema);
+                    }
+                    ajustarLimitesMapa(true);
+                } else {
+                    // O erro que você viu ("type object 'Problema' has no attribute 'TIPO_PROBLEMA_CHOICES'")
+                    // está sendo lançado ANTES desta parte, provavelmente na construção de 'dadosParaEnviar'
+                    // ou em uma validação no JS que não deveria existir.
+                    // A mensagem de erro da API (resultado.error) seria outra coisa.
+                    throw new Error(resultado.error || `Erro ${response.status} ao registrar problema.`);
+                }
+            } catch (e) {
+                // Esta linha (354) é onde o erro original foi capturado.
+                console.error("Erro ao submeter relatório de problema:", e); // Loga o erro real
+                mostrarMensagemGlobal(`Falha ao registrar problema: ${e.message}`, "erro");
+            } finally {
+                pararRegistroPin();
             }
         }
-        function mostrarSelecaoTipoProblema() {
-            let itensTipoProblema = TIPOS_PROBLEMAS.map(t => `<li><label><input type="radio" name="tipoProblema" value="${t.id}" ${dadosNovoPin.tipo_problema === t.id ? 'checked' : ''}><i class="fas ${t.iconeFa}" style="margin-right: 8px; color: var(--primary-color);"></i> ${t.nome}</label></li>`).join('');
-            if(conteudoModalEl) conteudoModalEl.innerHTML = `<h2>Qual o Tipo de Problema?</h2><ul class="problem-type-list">${itensTipoProblema}</ul><div class="modal-actions"><button type="button" class="secondary-btn" id="btnVoltTipo">← Voltar</button><button type="button" class="confirm-btn" id="btnConfTipo">Avançar →</button></div>`;
-            document.getElementById('btnConfTipo').onclick = () => { const tipoSel = document.querySelector('input[name="tipoProblema"]:checked'); if (tipoSel) { dadosNovoPin.tipo_problema = tipoSel.value; mostrarDescricaoProblema(); } else { alert('Selecione o tipo.'); } };
-            document.getElementById('btnVoltTipo').onclick = () => mostrarConfirmacaoEndereco(L.latLng(dadosNovoPin.latitude, dadosNovoPin.longitude), true);
-            abrirModal();
-        }
-        function mostrarDescricaoProblema() {
-            const descAtual = dadosNovoPin.descricao || '';
-            if(conteudoModalEl) conteudoModalEl.innerHTML = `<h2>Descreva o Problema (Opcional):</h2><textarea id="input-descricao-problema" placeholder="Detalhes...">${descAtual}</textarea><div class="modal-actions"><button type="button" class="secondary-btn" id="btnVoltDesc">← Voltar</button><button type="button" class="confirm-btn" id="btnSubmeter">Concluir <i class="fas fa-check-circle"></i></button></div>`;
-            document.getElementById('btnSubmeter').onclick = () => { dadosNovoPin.descricao = document.getElementById('input-descricao-problema').value.trim(); submeterRelatorioProblema(); };
-            document.getElementById('btnVoltDesc').onclick = mostrarSelecaoTipoProblema;
-            abrirModal();
-        }
-        async function submeterRelatorioProblema() { // ESTA FUNÇÃO PRECISARÁ DE FETCH POST PARA O DJANGO
-            if (!dadosNovoPin.latitude || !dadosNovoPin.longitude || !dadosNovoPin.tipo_problema) { alert("Dados incompletos."); pararRegistroPin(); return; }
-            console.log("Enviando dados do novo problema:", dadosNovoPin);
-            fecharModal();
-            // TODO: Substituir por fetch POST para a API Django, usando CSRF_TOKEN
-            // Ex: const response = await fetch('/api/problemas/registrar/', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN}, body: JSON.stringify(dadosNovoPin) });
-            // const resultado = await response.json(); if (resultado.success) ... else ...
-            try {
-                await new Promise(resolve => setTimeout(resolve, 500)); // Simulação
-                const problemaSalvo = { ...dadosNovoPin, id: Date.now(), status: 'pendente', id_usuario: estaLogado ? 123 : null, data_reporte: new Date().toISOString() };
-                problemasCarregados.push(problemaSalvo);
-                adicionarMarcadorProblema(problemaSalvo);
-                mostrarMensagemConfirmacao("Problema cadastrado com sucesso!");
-            } catch (e) { alert("Erro ao registrar."); console.error("Erro ao submeter:", e); }
-            finally { pararRegistroPin(); }
-        }
-        const tratarCliqueMapaParaRegistro = (coords) => { // coords já é latlng
-            if (!modoCadastroPinAtivo) return;
-            console.log("JS: Clique no mapa para registro em:", coords);
-            esconderMensagemTemporaria();
+
+        const tratarCliqueMapaParaRegistro = (eventoLeaflet) => {
+            if (!modoCadastroPinAtivo || !leafletMapInstance) return;
+            const latlng = eventoLeaflet.latlng;
+            esconderMensagemTemporariaMapa(); // Esconde a mensagem "Clique no mapa..."
+
             if (marcadorTemporario) {
-                marcadorTemporario.setLatLng(coords);
+                marcadorTemporario.setLatLng(latlng);
             } else {
-                marcadorTemporario = L.marker(coords, { draggable: true, icon: iconePadraoLeaflet }).addTo(leafletMapInstance);
+                marcadorTemporario = L.marker(latlng, { draggable: true, icon: iconePadraoLeaflet }).addTo(leafletMapInstance);
                 marcadorTemporario.on('dragend', (e) => {
-                    const pos = e.target.getLatLng();
-                    dadosNovoPin.latitude = pos.lat;
-                    dadosNovoPin.longitude = pos.lng;
-                    if (overlayModalEl && overlayModalEl.classList.contains('active') && document.getElementById('btnConfEnd')) {
-                        mostrarConfirmacaoEndereco(pos, false);
+                    const novaPosicao = e.target.getLatLng();
+                    dadosNovoPin.latitude = novaPosicao.lat;
+                    dadosNovoPin.longitude = novaPosicao.lng;
+                    // Se o modal de confirmação de endereço estiver aberto, atualiza o texto
+                    if (overlayModalEl?.classList.contains('active')) {
+                        const enderecoPreviewEl = document.getElementById('endereco-preview-modal');
+                        if (enderecoPreviewEl) {
+                            enderecoPreviewEl.textContent = `(Localização ajustada) Lat: ${novaPosicao.lat.toFixed(5)}, Lng: ${novaPosicao.lng.toFixed(5)}`;
+                            // Idealmente, faria uma nova chamada ao Nominatim aqui se quisesse o nome do endereço atualizado
+                        }
                     }
                 });
             }
-            mostrarConfirmacaoEndereco(coords, true);
+            mostrarConfirmacaoEndereco(latlng, true); // Passa true para indicar que é um novo marcador/ponto
         };
-        
-        function obterNomeTipoProblema(idTipo) { const tipo = TIPOS_PROBLEMAS.find(t => t.id === idTipo); return tipo ? tipo.nome : idTipo.charAt(0).toUpperCase() + idTipo.slice(1); }
-        function getStatusInfo(statusId) { return STATUS_PROBLEMAS[statusId] || { nome: statusId, cor: '#6c757d' }; }
-        function adicionarMarcadorProblema(problema) {
-            if (!problema || typeof problema.latitude !== 'number' || typeof problema.longitude !== 'number') { console.warn("Dados inválidos para marcador:", problema); return; }
-            const marcador = L.marker([problema.latitude, problema.longitude], { icon: iconePadraoLeaflet, idProblema: problema.id });
-            const nomeTipo = obterNomeTipoProblema(problema.tipo_problema);
-            const statusInfo = getStatusInfo(problema.status);
-            let popupContent = `<div style="font-family: 'Roboto', sans-serif; max-width: 280px;"><h4 style="margin-bottom: 5px; color: var(--primary-color); font-size: 1.1em;">${nomeTipo}</h4><p style="margin-bottom: 8px; font-size: 0.9em; color: #555;">Status: <strong style="color: ${statusInfo.cor};">${statusInfo.nome}</strong></p>`;
-            if (problema.enderecoTexto && !problema.enderecoTexto.toLowerCase().startsWith('lat:')) { popupContent += `<p style="font-size: 0.85em; color: #666; margin-bottom: 5px;"><i class="fas fa-map-pin" style="margin-right: 5px;"></i> ${problema.enderecoTexto}</p>`; }
-            if (problema.descricao) { popupContent += `<p style="font-size: 0.9em; font-style: italic; margin-bottom: 5px; background-color: #f9f9f9; border-left: 3px solid var(--lighter-blue); padding: 8px;">"${problema.descricao}"</p>`; }
-            if (problema.data_reporte) { const dataFmt = new Date(problema.data_reporte).toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric'}); popupContent += `<p style="font-size: 0.8em; color: #777;">Reportado em: ${dataFmt}</p>`; }
-            popupContent += `</div>`;
-            marcador.bindPopup(popupContent);
-            if (camadaMarcadores) camadaMarcadores.addLayer(marcador); else console.error("camadaMarcadores não definida!");
-        }
-        function ajustarLimitesMapa(temMarcadores) {
-            if (temMarcadores && camadaMarcadores && camadaMarcadores.getLayers().length > 0) {
+
+        const obterNomeTipoProblema = idTipo => (TIPOS_PROBLEMAS.find(t => t.id === idTipo) || { nome: idTipo }).nome;
+        const getTipoProblemaInfo = idTipo => TIPOS_PROBLEMAS.find(t => t.id === idTipo) || { nome: idTipo, iconeFa: 'fa-question-circle', cor: '#9E9E9E' }; // Default
+        const getStatusInfo = idStatus => STATUS_PROBLEMAS_INFO[idStatus] || { nome: String(idStatus), corCssVar: 'var(--text-color-light)', iconeFa: 'fa-circle-question' }; // Default
+
+        const criarIconeProblema = (tipoProblemaId) => {
+            const infoTipo = getTipoProblemaInfo(tipoProblemaId);
+            return L.divIcon({
+                html: `<i class="fas ${infoTipo.iconeFa}" style="color:${infoTipo.cor}; font-size:1.75rem; text-shadow:0 1px 2px rgba(0,0,0,0.5);"></i>`,
+                className: 'custom-leaflet-div-icon', // Para aplicar estilos CSS se necessário
+                iconSize: [30, 30], // Tamanho do ícone
+                iconAnchor: [15, 30], // Ponto de ancoragem (importante para onde o ícone "aponta")
+                popupAnchor: [0, -30] // Posição do popup em relação ao ícone
+            });
+        };
+
+        const adicionarMarcadorProblema = (problema) => {
+            if (!problema || typeof problema.latitude !== 'number' || typeof problema.longitude !== 'number' || !camadaMarcadores) {
+                console.warn("Dados do problema inválidos ou camada de marcadores não existe:", problema);
+                return;
+            }
+            const icone = criarIconeProblema(problema.tipo_problema); // Usa a chave 'tipo_problema'
+            const marcador = L.marker([problema.latitude, problema.longitude], {
+                icon: icone,
+                idProblema: problema.id, // Propriedade customizada para identificar o marcador
+                alt: `Problema: ${problema.tipo_display}` // Texto alternativo para acessibilidade
+            });
+
+            const infoTipo = getTipoProblemaInfo(problema.tipo_problema);
+            const infoStatus = getStatusInfo(problema.status);
+
+            // Usar getComputedStyle para resolver a variável CSS da cor do status
+            // Isso é mais complexo, por simplicidade, vamos usar a cor direta se não for uma variável CSS
+            let corStatusResolved = infoStatus.corCssVar.startsWith('var(') ? getComputedStyle(document.documentElement).getPropertyValue(infoStatus.corCssVar.slice(4, -1)).trim() : infoStatus.corCssVar;
+            if (!corStatusResolved) corStatusResolved = '#6c757d'; // Fallback se a variável não resolver
+
+            let htmlPopup = `
+                <div class="map-popup-content">
+                    <h4 style="color:${infoTipo.cor}; margin-bottom: 8px; font-size: 1.1em;">
+                        <i class="fas ${infoTipo.iconeFa} fa-fw"></i> ${problema.tipo_display}
+                    </h4>
+                    <p style="margin-bottom: 5px;">Status: 
+                        <strong style="color:${corStatusResolved};">
+                            <i class="fas ${infoStatus.iconeFa} fa-fw"></i> ${infoStatus.nome}
+                        </strong>
+                    </p>`;
+
+            if (problema.enderecoTexto && !problema.enderecoTexto.toLowerCase().startsWith('lat:')) {
+                htmlPopup += `<p style="margin-bottom: 5px; font-size:0.9em;"><i class="fas fa-map-marker-alt fa-fw" style="opacity:0.7;"></i> ${problema.enderecoTexto}</p>`;
+            }
+            if (problema.descricao) {
+                htmlPopup += `<p style="margin-bottom: 5px; font-style:italic; color:#555;"><em>"${problema.descricao}"</em></p>`;
+            }
+            if (problema.data_reporte) {
+                const dataFormatada = new Date(problema.data_reporte).toLocaleDateString('pt-BR', {
+                    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+                htmlPopup += `<p style="font-size:0.85em; color:#777;"><small><i class="fas fa-calendar-alt fa-fw" style="opacity:0.7;"></i> Reportado em: ${dataFormatada} por ${problema.reportado_por}</small></p>`;
+            }
+            htmlPopup += '</div>';
+            marcador.bindPopup(htmlPopup);
+            camadaMarcadores.addLayer(marcador);
+        };
+
+        const ajustarLimitesMapa = (temMarcadores) => {
+            if (!leafletMapInstance || !camadaMarcadores) return;
+            if (temMarcadores && camadaMarcadores.getLayers().length > 0) {
                 const bounds = camadaMarcadores.getBounds();
-                if (bounds.isValid()) { leafletMapInstance.fitBounds(bounds, { padding: [40, 40], maxZoom: 17 }); }
-                else if (camadaMarcadores.getLayers().length === 1) { leafletMapInstance.setView(camadaMarcadores.getLayers()[0].getLatLng(), 16); }
-            } else if (!temMarcadores && leafletMapInstance) { leafletMapInstance.setView([-23.5329, -46.7917], 13); }
-        }
-        async function buscarEExibirProblemas(tipoFiltro = null) { // ESTA FUNÇÃO PRECISARÁ DE FETCH GET PARA O DJANGO
-            console.log(`JS: Buscando problemas... Filtro: ${tipoFiltro || 'Todos'}`);
-            if (!camadaMarcadores) return;
-            camadaMarcadores.clearLayers();
-            // TODO: Substituir por fetch GET para API Django. Ex: /api/problemas/?tipo_problema=buraco
-            const mockProblemas = [ {id:1, latitude:-23.530, longitude:-46.790, tipo_problema:'buraco', descricao:'Grande na via principal.', enderecoTexto:'Rua das Acácias, 123', id_usuario:123, status: 'pendente', data_reporte: '2023-10-01T10:00:00Z'}, {id:2, latitude:-23.535, longitude:-46.785, tipo_problema:'lixo', descricao:'Acúmulo constante.', enderecoTexto:'Av. dos Cravos, esquina', id_usuario:456, status: 'solucionado', data_reporte: '2023-09-15T14:30:00Z'}];
-            // Apenas carrega o mock se não houver filtro e for a primeira carga
-            if (problemasCarregados.length === 0 && tipoFiltro === null) problemasCarregados = [...mockProblemas]; 
-            const problemasParaExibir = tipoFiltro ? problemasCarregados.filter(p => p.tipo_problema === tipoFiltro) : problemasCarregados;
-            problemasParaExibir.forEach(adicionarMarcadorProblema);
-            ajustarLimitesMapa(problemasParaExibir.length > 0);
+                if (bounds.isValid()) {
+                    leafletMapInstance.fitBounds(bounds, { padding: [50, 50], maxZoom: 17, duration: 0.5 });
+                } else if (camadaMarcadores.getLayers().length === 1) { // Caso de apenas um marcador
+                    leafletMapInstance.setView(camadaMarcadores.getLayers()[0].getLatLng(), 16, { animate: true, duration: 0.5 });
+                }
+            } else if (!temMarcadores) { // Se não há marcadores (ex: filtro vazio), volta para a visualização padrão
+                leafletMapInstance.setView([-23.5329, -46.7917], 13, { animate: true, duration: 0.5 });
+            }
+        };
+
+        async function buscarEExibirProblemas(filtroTipo = null) {
+            if (!camadaMarcadores || !URL_LISTAR_PROBLEMAS) {
+                console.error("Camada de marcadores ou URL_LISTAR_PROBLEMAS não definida.");
+                return;
+            }
+            camadaMarcadores.clearLayers(); // Limpa marcadores existentes
+            mostrarMensagemGlobal("Carregando problemas...", "info", 5000);
+
+            try {
+                const response = await fetch(URL_LISTAR_PROBLEMAS);
+                if (!response.ok) {
+                    throw new Error(`Erro ${response.status} ao buscar problemas.`);
+                }
+                const data = await response.json();
+
+                if (data.success && data.problemas) {
+                    problemasCarregados = data.problemas; // Atualiza a lista local
+                    const problemasParaExibir = filtroTipo
+                        ? problemasCarregados.filter(p => p.tipo_problema === filtroTipo)
+                        : problemasCarregados;
+
+                    if (problemasParaExibir.length === 0) {
+                        mostrarMensagemGlobal(
+                            filtroTipo
+                                ? `Nenhum problema do tipo "${obterNomeTipoProblema(filtroTipo)}" encontrado.`
+                                : "Nenhum problema cadastrado no momento.",
+                            "info"
+                        );
+                    } else {
+                        mostrarMensagemGlobal(`${problemasParaExibir.length} problema(s) carregado(s).`, "confirmacao", 2000);
+                    }
+                    problemasParaExibir.forEach(adicionarMarcadorProblema);
+                    ajustarLimitesMapa(problemasParaExibir.length > 0);
+
+                } else {
+                    throw new Error(data.error || "Resposta da API de listagem não foi bem sucedida.");
+                }
+            } catch (e) {
+                console.error("Erro ao buscar e exibir problemas:", e);
+                mostrarMensagemGlobal(`Falha ao carregar problemas: ${e.message}`, "erro");
+                problemasCarregados = []; // Limpa a lista local em caso de erro
+                ajustarLimitesMapa(false); // Ajusta mapa para visão padrão
+            }
         }
 
+        const fecharMenuLateralDropdown = () => {
+            if (menuLateralEl && botaoMenuLateralEl && menuLateralEl.classList.contains('visible')) {
+                menuLateralEl.classList.remove('visible');
+                botaoMenuLateralEl.setAttribute('aria-expanded', 'false');
+                setTimeout(() => { if (!menuLateralEl.classList.contains('visible')) menuLateralEl.style.display = 'none'; }, 150); // Animação
+                if (ultimoElementoFocado === botaoMenuLateralEl || menuLateralEl.contains(document.activeElement)) { // Se o foco estava no botão ou dentro do menu
+                    botaoMenuLateralEl.focus(); // Volta o foco para o botão do menu
+                }
+            }
+        };
+
+        function renderizarMenuLateralItensFiltro() {
+            return TIPOS_PROBLEMAS.map(t =>
+                `<li data-filter="${t.id}" role="menuitem" tabindex="0">
+                    <i class="fas ${t.iconeFa} fa-fw" style="color:${t.cor};"></i>
+                    <span>${t.nome}</span>
+                    <i class="fas fa-chevron-right chev" style="margin-left:auto; opacity:0.7;"></i>
+                </li>`
+            ).join('');
+        }
+
+        function adicionarListenersFiltroMenu(elementoMenu) {
+            elementoMenu.querySelectorAll('li[data-filter]').forEach(item => {
+                const acaoFiltro = () => {
+                    buscarEExibirProblemas(item.getAttribute('data-filter'));
+                    fecharMenuLateralDropdown();
+                };
+                item.addEventListener('click', acaoFiltro);
+                item.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); acaoFiltro(); } });
+            });
+            const btnVerTodos = elementoMenu.querySelector('#btnVerTodosMenu');
+            if (btnVerTodos) {
+                btnVerTodos.addEventListener('click', () => {
+                    buscarEExibirProblemas(null); // null para ver todos
+                    fecharMenuLateralDropdown();
+                });
+            }
+        }
         function renderizarMenuLateralDeslogado() {
-             console.log("JS: Render menu DESLOGADO");
-             let itensFiltro = TIPOS_PROBLEMAS.map(t => `<li data-filter="${t.id}" role="menuitem"><span>${t.nome}</span><i class="fas fa-chevron-right"></i></li>`).join('');
-             if(menuLateralEl) menuLateralEl.innerHTML = `<div class="sidebar-header">Visualizar por Categoria:</div><ul class="sidebar-content" role="menu">${itensFiltro}</ul><div class="sidebar-footer"><button id="botao-ver-todos">Ver todos <i class="fas fa-eye"></i></button></div>`;
-             if(menuLateralEl) menuLateralEl.querySelectorAll('.sidebar-content li[data-filter]').forEach(item => item.addEventListener('click', () => { buscarEExibirProblemas(item.getAttribute('data-filter')); fecharMenuLateral(); }));
+            if (!menuLateralEl) return;
+            const header = menuLateralEl.querySelector('.sidebar-header');
+            const content = menuLateralEl.querySelector('.sidebar-content');
+            const footer = menuLateralEl.querySelector('.sidebar-footer');
+
+            if (header) header.textContent = "Visualizar Tipos de Problemas";
+            if (content) content.innerHTML = renderizarMenuLateralItensFiltro();
+            if (footer) footer.innerHTML = '<button type="button" id="btnVerTodosMenu" class="sidebar-btn-full"><i class="fas fa-eye fa-fw"></i> Ver Todos os Problemas</button>';
+            adicionarListenersFiltroMenu(menuLateralEl);
         }
         function renderizarMenuLateralLogado() {
-            console.log("JS: Render menu LOGADO");
-            let itensFiltro = TIPOS_PROBLEMAS.map(t => `<li data-filter="${t.id}" role="menuitem"><span>${t.nome}</span><i class="fas fa-chevron-right"></i></li>`).join('');
-            if(menuLateralEl) menuLateralEl.innerHTML = `<div class="sidebar-header">Opções:</div><ul class="sidebar-content" role="menu"><li id="item-cadastrar-pin-sidebar" role="menuitem" class="${modoCadastroPinAtivo ? 'active-registration' : ''}"><span><i class="fas fa-map-marker-alt"></i> Cadastrar Problema</span><i class="fas fa-plus-circle"></i></li><hr style="border-color: rgba(255,255,255,0.2); margin: 5px 0;"><div class="sidebar-header" style="padding-top:0;border:none;margin-bottom:5px;">Visualizar Categoria:</div>${itensFiltro}</ul><div class="sidebar-footer"><button id="botao-ver-todos">Ver todos <i class="fas fa-eye"></i></button></div>`;
-            const itemCadSidebar = menuLateralEl ? menuLateralEl.querySelector('#item-cadastrar-pin-sidebar') : null;
-            if (itemCadSidebar) itemCadSidebar.addEventListener('click', () => { if (!modoCadastroPinAtivo) { iniciarRegistroPin(); mostrarMensagemTemporaria("Clique no mapa."); } else { pararRegistroPin(); } fecharMenuLateral(); });
-            if(menuLateralEl) menuLateralEl.querySelectorAll('.sidebar-content li[data-filter]').forEach(item => item.addEventListener('click', () => { buscarEExibirProblemas(item.getAttribute('data-filter')); fecharMenuLateral(); }));
+            if (!menuLateralEl) return;
+            const classeCadastroAtiva = modoCadastroPinAtivo ? 'active-registration' : '';
+            const header = menuLateralEl.querySelector('.sidebar-header');
+            const content = menuLateralEl.querySelector('.sidebar-content');
+            const footer = menuLateralEl.querySelector('.sidebar-footer');
+
+            if (header) header.textContent = "Menu Principal";
+            if (content) {
+                content.innerHTML = `
+                    <li id="item-cadastrar-pin-sidebar" class="${classeCadastroAtiva}" role="menuitem" tabindex="0">
+                        <i class="fas ${modoCadastroPinAtivo ? 'fa-times-circle' : 'fa-plus-circle'} fa-fw icon-primary"></i>
+                        <span>${modoCadastroPinAtivo ? 'Cancelar Cadastro' : 'Cadastrar Novo Problema'}</span>
+                    </li>
+                    <hr style="margin: 8px 0;">
+                    <div class="sidebar-section-title" style="padding: 5px 16px; font-size: 0.8em; text-transform: uppercase; color: #666;">Filtrar por Tipo:</div>
+                    ${renderizarMenuLateralItensFiltro()}
+                `;
+            }
+            if (footer) footer.innerHTML = '<button type="button" id="btnVerTodosMenu" class="sidebar-btn-full"><i class="fas fa-eye fa-fw"></i> Ver Todos os Problemas</button>';
+
+            const itemCadastrar = menuLateralEl.querySelector('#item-cadastrar-pin-sidebar');
+            if (itemCadastrar) {
+                const acaoCadastro = () => {
+                    modoCadastroPinAtivo ? pararRegistroPin(true) : iniciarInstrucaoCadastroPin();
+                    // Não fechar o menu aqui, o usuário pode querer cancelar e continuar no menu.
+                    // Apenas atualiza o estado visual do item.
+                    itemCadastrar.classList.toggle('active-registration', modoCadastroPinAtivo);
+                    itemCadastrar.querySelector('i').className = `fas ${modoCadastroPinAtivo ? 'fa-times-circle' : 'fa-plus-circle'} fa-fw icon-primary`;
+                    itemCadastrar.querySelector('span').textContent = modoCadastroPinAtivo ? 'Cancelar Cadastro' : 'Cadastrar Novo Problema';
+                    if (!modoCadastroPinAtivo) fecharMenuLateralDropdown(); // Fecha se iniciou cadastro
+                };
+                itemCadastrar.addEventListener('click', acaoCadastro);
+                itemCadastrar.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); acaoCadastro(); } });
+            }
+            adicionarListenersFiltroMenu(menuLateralEl);
         }
-        function atualizarConteudoMenuLateral(logado) {
-            if (!menuLateralEl) { console.error("JS: Elemento menu-lateral não encontrado."); return; }
-            console.log("JS: [Sidebar Update] Logado:", logado);
-            menuLateralEl.innerHTML = '';
-            if (logado) { renderizarMenuLateralLogado(); } else { renderizarMenuLateralDeslogado(); }
-            const btnVerTodos = menuLateralEl.querySelector('#botao-ver-todos');
-            if (btnVerTodos) btnVerTodos.addEventListener('click', () => { buscarEExibirProblemas(null); fecharMenuLateral(); });
+        function atualizarConteudoMenuLateralCondicionalmente() {
+            if (menuLateralEl) {
+                USUARIO_LOGADO ? renderizarMenuLateralLogado() : renderizarMenuLateralDeslogado();
+            }
         }
         const alternarVisibilidadeMenuLateral = () => {
             if (!menuLateralEl || !botaoMenuLateralEl) return;
-            menuLateralEl.classList.toggle('open');
-            botaoMenuLateralEl.setAttribute('aria-expanded', menuLateralEl.classList.contains('open'));
-            if (menuLateralEl.classList.contains('open')) {
-                atualizarConteudoMenuLateral(estaLogado); // Passa o estado de login
-            }
-        };
-        
-        function parseCoordenadas(texto) { const r = /^(-?\d{1,3}(?:\.\d+)?)\s*[,;\s]\s*(-?\d{1,3}(?:\.\d+)?)$/; const m=texto.trim().match(r); if(m){const la=parseFloat(m[1]),lo=parseFloat(m[2]);if(la>=-90&&la<=90&&lo>=-180&&lo<=180)return{lat:la,lon:lo,nome:`Coords: ${la.toFixed(5)},${lo.toFixed(5)}`}} return null; }
-        function inicializarAutocompleteGlobal() {
-            if (!inputBuscaGlobalEl || typeof autoComplete === 'undefined') { console.error("Input busca global ou lib autoComplete.js não encontrada."); return; }
-            console.log("JS: Inicializando Autocomplete GLOBAL...");
-            instanciaAutocompleteGlobal = new autoComplete({
-                selector: "#input-busca-global",
-                data: {
-                    src: async (query) => {
-                        const coords = parseCoordenadas(query);
-                        if (coords) return [{ nome: coords.nome, lat: coords.lat, lon: coords.lon, isCoord: true }];
-                        if (query.length < 3) return [];
-                        try {
-                            const vb = "-46.8413,-23.5794,-46.7049,-23.4888"; // Osasco
-                            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=br&viewbox=${vb}&bounded=1&accept-language=pt-BR`;
-                            const response = await fetch(url);
-                            if (!response.ok) throw new Error(`Nominatim ${response.status}`);
-                            const data = await response.json();
-                            return data.map(p => ({ nome: p.display_name, lat: parseFloat(p.lat), lon: parseFloat(p.lon) }));
-                        } catch (error) { console.error("Erro Nominatim:", error); return []; }
-                    },
-                    keys: ["nome"], cache: false
-                },
-                threshold: 1, debounce: 300,
-                resultsList: { element: (l,d) => {if(!d.results.length && d.query.length >=(parseCoordenadas(d.query)?1:3)){const m=document.createElement("div");m.className="no_result";m.innerHTML=`<span>No results for "${d.query}"</span>`;l.prepend(m);}},noResults:true,maxResults:5,tabSelect:true},
-                resultItem: { highlight:true, element: (item,data) => {let i='<i class="fas fa-map-marker-alt" style="margin-right:8px;color:#007bff;"></i>';if(data.value.isCoord)i='<i class="fas fa-compass" style="margin-right:8px;color:#28a745;"></i>';item.innerHTML=`<span style="display:flex;align-items:center;">${i}${data.match}</span>`;}},
-                events: { input: { selection: (event) => { const sel = event.detail.selection.value; if(inputBuscaGlobalEl) inputBuscaGlobalEl.value = sel.nome; const coord = L.latLng(sel.lat, sel.lon); if(leafletMapInstance) leafletMapInstance.setView(coord, 17); if (estaLogado && modoCadastroPinAtivo) tratarCliqueMapaParaRegistro(coord); }}}
-            });
-            console.log("JS: Autocomplete GLOBAL inicializado.");
-        }
+            const estaVisivel = menuLateralEl.classList.contains('visible');
 
-        // --- ATRIBUIÇÃO DE EVENT LISTENERS ---
-        if (botaoMenuLateralEl) botaoMenuLateralEl.addEventListener('click', alternarVisibilidadeMenuLateral);
-        else console.error("JS: Botão Menu Lateral não encontrado para event listener!");
-
-        if (botaoPerfilUsuarioEl && dropdownUsuarioEl) {
-            botaoPerfilUsuarioEl.addEventListener('click', () => {
-                const isExpanded = botaoPerfilUsuarioEl.getAttribute('aria-expanded') === 'true';
-                botaoPerfilUsuarioEl.setAttribute('aria-expanded', !isExpanded);
-                dropdownUsuarioEl.style.display = isExpanded ? 'none' : 'block';
-            });
-            document.addEventListener('click', (event) => {
-                if (dropdownUsuarioEl.style.display === 'block' && !botaoPerfilUsuarioEl.contains(event.target) && !dropdownUsuarioEl.contains(event.target)) {
+            if (estaVisivel) {
+                fecharMenuLateralDropdown();
+            } else {
+                ultimoElementoFocado = document.activeElement; // Salva o foco antes de abrir
+                atualizarConteudoMenuLateralCondicionalmente(); // Atualiza o conteúdo ANTES de mostrar
+                menuLateralEl.style.display = 'flex'; // Garante que é flex
+                requestAnimationFrame(() => { // Força reflow para animação
+                    menuLateralEl.classList.add('visible');
+                    botaoMenuLateralEl.setAttribute('aria-expanded', 'true');
+                    // Tenta focar no primeiro item interativo do menu
+                    const primeiroItemFocavel = menuLateralEl.querySelector('.sidebar-content li[tabindex="0"], .sidebar-footer button');
+                    if (primeiroItemFocavel) primeiroItemFocavel.focus();
+                    else menuLateralEl.focus(); // Fallback para o próprio menu
+                });
+                // Fecha o dropdown do usuário se estiver aberto
+                if (dropdownUsuarioEl && dropdownUsuarioEl.style.display === 'block') {
                     botaoPerfilUsuarioEl.setAttribute('aria-expanded', 'false');
                     dropdownUsuarioEl.style.display = 'none';
                 }
+            }
+        };
+
+        async function geocodificarEIrParaLocal(queryTexto) {
+            if (!queryTexto || queryTexto.trim() === "") { mostrarMensagemGlobal("Digite um local para buscar.", "info", 2000); return; }
+            if (!leafletMapInstance) { mostrarMensagemGlobal("Mapa não está pronto para busca.", "erro", 3000); return; }
+
+            mostrarMensagemGlobal(`Buscando por "${queryTexto}"...`, "info", 10000); // Longa duração, será substituída
+            const urlNominatim = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(queryTexto)}&format=json&limit=1&addressdetails=1&accept-language=pt-BR&countrycodes=br&viewbox=-46.8905,-23.5838,-46.6865,-23.4795&bounded=1`; // Viewbox para Osasco
+
+            try {
+                const resposta = await fetch(urlNominatim);
+                if (!resposta.ok) throw new Error(`Nominatim respondeu com status: ${resposta.status}`);
+                const dados = await resposta.json();
+
+                if (dados && dados.length > 0) {
+                    const resultado = dados[0];
+                    const lat = parseFloat(resultado.lat);
+                    const lon = parseFloat(resultado.lon);
+                    const nomeLocal = resultado.display_name;
+
+                    console.log("Nominatim - Resultado encontrado:", nomeLocal, lat, lon);
+                    mostrarMensagemGlobal(`Local encontrado: ${nomeLocal.substring(0, 60)}...`, "confirmacao", 3000);
+
+                    leafletMapInstance.setView([lat, lon], 17, { animate: true }); // Zoom mais próximo
+
+                    if (marcadorBuscaTemporario) leafletMapInstance.removeLayer(marcadorBuscaTemporario);
+                    marcadorBuscaTemporario = L.marker([lat, lon], { icon: iconePadraoLeaflet, alt: `Resultado da busca: ${nomeLocal}` })
+                        .addTo(leafletMapInstance)
+                        .bindPopup(`<b>${nomeLocal}</b><p><small>Lat: ${lat.toFixed(5)}, Lon: ${lon.toFixed(5)}</small></p>`)
+                        .openPopup();
+
+                    if (inputBuscaGlobalEl) inputBuscaGlobalEl.value = nomeLocal; // Atualiza o campo de busca
+                } else {
+                    mostrarMensagemGlobal(`"${queryTexto}" não encontrado em Osasco. Tente refinar sua busca.`, "erro", 5000);
+                    console.warn("Nominatim: Nenhum resultado para a busca:", queryTexto);
+                }
+            } catch (e) {
+                console.error("Erro durante a geocodificação (Nominatim):", e);
+                mostrarMensagemGlobal("Falha ao buscar local. Verifique sua conexão ou tente mais tarde.", "erro", 6000);
+            }
+        }
+
+        function inicializarAutocompleteGlobal() {
+            if (!inputBuscaGlobalEl || typeof autoComplete === 'undefined' || !searchInputGroupEl) {
+                console.warn("Autocomplete não pode ser inicializado: elementos faltando ou biblioteca não carregada.");
+                return;
+            }
+            inputBuscaGlobalEl.setAttribute('autocomplete', 'off'); // Prevenir autocomplete do navegador
+
+            try {
+                instanciaAutocompleteGlobal = new autoComplete({
+                    selector: "#input-busca-global",
+                    placeHolder: "Pesquisar endereço em Osasco...",
+                    data: {
+                        src: async (query) => {
+                            if (!query || query.length < 3) return []; // Não busca com menos de 3 caracteres
+                            const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&addressdetails=1&accept-language=pt-BR&countrycodes=br&viewbox=-46.8905,-23.5838,-46.6865,-23.4795&bounded=1`; // Viewbox para Osasco
+                            try {
+                                const response = await fetch(url);
+                                const data = await response.json();
+                                return data.map(item => ({
+                                    name: item.display_name,
+                                    value: item.display_name, // O que vai para o input
+                                    lat: item.lat,
+                                    lon: item.lon
+                                }));
+                            } catch (error) {
+                                console.error("Erro no autocomplete:", error);
+                                return [];
+                            }
+                        },
+                        keys: ["name"], // Chave para buscar dentro dos objetos retornados
+                        cache: false
+                    },
+                    resultsList: {
+                        render: true,
+                        container: source => {
+                            source.setAttribute("id", "autoComplete_list_global");
+                        },
+                        destination: document.querySelector("#input-busca-global"),
+                        position: "afterend",
+                        element: "ul",
+                        maxResults: 5,
+                    },
+                    resultItem: {
+                        content: (data, source) => {
+                            source.innerHTML = data.match; // data.match contém o texto com <mark>
+                        },
+                        element: "li",
+                        highlight: true // aplica classe .autoComplete_highlight
+                    },
+                    noResults: () => {
+                        const result = document.createElement("li");
+                        result.setAttribute("class", "no_result");
+                        result.setAttribute("tabindex", "1");
+                        result.innerHTML = "Nenhum resultado encontrado";
+                        document.getElementById("autoComplete_list_global").appendChild(result);
+                    },
+                    onSelection: (feedback) => {
+                        const selection = feedback.selection.value; // Objeto selecionado
+                        if (inputBuscaGlobalEl) inputBuscaGlobalEl.value = selection.name;
+                        if (searchInputGroupEl) searchInputGroupEl.classList.remove('autocomplete-active');
+                        // geocodificarEIrParaLocal(selection.name); // Ou usar diretamente as coords:
+                        if (selection.lat && selection.lon) {
+                            leafletMapInstance.setView([selection.lat, selection.lon], 17, { animate: true });
+                            if (marcadorBuscaTemporario) leafletMapInstance.removeLayer(marcadorBuscaTemporario);
+                            marcadorBuscaTemporario = L.marker([selection.lat, selection.lon], { icon: iconePadraoLeaflet, alt: `Resultado da busca: ${selection.name}` })
+                                .addTo(leafletMapInstance)
+                                .bindPopup(`<b>${selection.name}</b>`)
+                                .openPopup();
+                        } else {
+                            geocodificarEIrParaLocal(selection.name); // Fallback se não tiver lat/lon
+                        }
+                        inputBuscaGlobalEl.blur(); // Tira o foco do input
+                    }
+                });
+
+                const listaResultadosEl = document.getElementById("autoComplete_list_global");
+                if (listaResultadosEl && searchInputGroupEl) {
+                    const observer = new MutationObserver(() => {
+                        const estaEscondida = listaResultadosEl.classList.contains('autoComplete_list_hidden') || window.getComputedStyle(listaResultadosEl).display === 'none';
+                        searchInputGroupEl.classList.toggle('autocomplete-active', !estaEscondida && listaResultadosEl.children.length > 0);
+                    });
+                    observer.observe(listaResultadosEl, { attributes: true, childList: true, subtree: true });
+                }
+                console.log("JS: Autocomplete global inicializado.");
+            } catch (e) {
+                console.error("Erro CRÍTICO ao inicializar autocomplete:", e);
+            }
+        }
+        // RECORTAR ESTE BLOCO INTEIRO DE ONDE ELE ESTÁ ATUALMENTE
+        function adicionarAtalhoTecladoNovoPin() {
+            document.addEventListener('keydown', function (event) {
+                if (event.code === 'Space') {
+                    console.log("--- Atalho Espaço Pressionado ---");
+                    const elementoFocado = document.activeElement;
+                    const nomeTagFocada = elementoFocado ? elementoFocado.tagName.toLowerCase() : null;
+                    const modalAtivo = overlayModalEl && overlayModalEl.classList.contains('active');
+
+                    console.log("Condição 1 (USUARIO_LOGADO):", USUARIO_LOGADO);
+                    console.log("Condição 2 (Foco Input):", !['input', 'textarea', 'select'].includes(nomeTagFocada), "(Focado:", nomeTagFocada, ")");
+                    console.log("Condição 3 (Modal Ativo):", !modalAtivo, "(Ativo:", modalAtivo, ")");
+
+                    if (USUARIO_LOGADO &&
+                        !['input', 'textarea', 'select'].includes(nomeTagFocada) &&
+                        !modalAtivo) {
+                        console.log(">>> CONDIÇÕES PASSARAM! Acionando atalho. <<<");
+                        event.preventDefault();
+                        if (modoCadastroPinAtivo) {
+                            console.log("Modo cadastro já ativo, mostrando mensagem no mapa.");
+                            mostrarMensagemTemporariaMapa("Modo de cadastro de problema já está ativo. Clique no mapa.", 3000);
+                        } else {
+                            console.log("Iniciando instrução de cadastro de pin.");
+                            iniciarInstrucaoCadastroPin(); // ESTA LINHA CAUSA O ERRO SE NÃO ENXERGAR A FUNÇÃO
+                            mostrarMensagemGlobal("Modo de cadastro de pin ativado (atalho 'Espaço').", "info", 2000);
+                        }
+                    } else {
+                        console.log("--- Atalho NÃO acionado. Verifique as condições acima. ---");
+                    }
+                    console.log("---------------------------------");
+                }
             });
-        } else { if (estaLogado) console.warn("JS: Botão Perfil ou Dropdown não encontrado (normal se HTML não renderizou)."); }
-
+            console.log("JS: Atalho de teclado (VERSÃO COMPLETA COM LOGS) 'Espaço' para novo pin configurado.");
+        }
+        // --- LISTENERS DE EVENTOS DA UI ---
+        if (inputBuscaGlobalEl && searchInputGroupEl) {
+            inputBuscaGlobalEl.addEventListener('focus', () => searchInputGroupEl.classList.add('focused'));
+            inputBuscaGlobalEl.addEventListener('blur', () => {
+                // Delay para permitir clique na lista de autocomplete
+                setTimeout(() => {
+                    const listaAutocomplete = document.getElementById("autoComplete_list_global");
+                    if (!listaAutocomplete || !listaAutocomplete.contains(document.activeElement)) {
+                        searchInputGroupEl.classList.remove('focused');
+                        if (listaAutocomplete) listaAutocomplete.classList.add('autoComplete_list_hidden'); // Esconder lista
+                        searchInputGroupEl.classList.remove('autocomplete-active');
+                    }
+                }, 200);
+            });
+        }
+        if (searchSubmitBtnEl && inputBuscaGlobalEl) {
+            searchSubmitBtnEl.addEventListener('click', (e) => { e.preventDefault(); geocodificarEIrParaLocal(inputBuscaGlobalEl.value); inputBuscaGlobalEl.blur(); });
+        }
+        if (inputBuscaGlobalEl) {
+            inputBuscaGlobalEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    // Se o autocomplete tiver uma seleção ativa, o 'onSelection' cuidará.
+                    // Se não, faz a busca com o texto digitado.
+                    const listaAtiva = document.querySelector("#autoComplete_list_global li[aria-selected='true']");
+                    if (!listaAtiva) {
+                        geocodificarEIrParaLocal(inputBuscaGlobalEl.value);
+                    }
+                    inputBuscaGlobalEl.blur();
+                }
+            });
+        }
+        if (botaoMenuLateralEl) botaoMenuLateralEl.addEventListener('click', e => { e.stopPropagation(); alternarVisibilidadeMenuLateral(); });
+        if (botaoPerfilUsuarioEl && dropdownUsuarioEl) {
+            botaoPerfilUsuarioEl.addEventListener('click', e => {
+                e.stopPropagation();
+                const estaAberto = botaoPerfilUsuarioEl.getAttribute('aria-expanded') === 'true';
+                ultimoElementoFocado = document.activeElement; // Salva o foco atual
+                botaoPerfilUsuarioEl.setAttribute('aria-expanded', String(!estaAberto));
+                dropdownUsuarioEl.style.display = estaAberto ? 'none' : 'block';
+                if (!estaAberto) { // Se estava fechado e abriu
+                    dropdownUsuarioEl.querySelector('a[role="menuitem"]')?.focus(); // Foca no primeiro item
+                    if (menuLateralEl?.classList.contains('visible')) fecharMenuLateralDropdown(); // Fecha menu lateral se aberto
+                } else { // Se estava aberto e fechou
+                    // Volta o foco para o botão do perfil, se não foi para outro lugar
+                    if (ultimoElementoFocado === botaoPerfilUsuarioEl || document.body === document.activeElement) {
+                        botaoPerfilUsuarioEl.focus();
+                    }
+                }
+            });
+        }
+        document.addEventListener('click', e => { // Fechar menus ao clicar fora
+            if (menuLateralEl?.classList.contains('visible') && !menuLateralEl.contains(e.target) && !botaoMenuLateralEl.contains(e.target)) {
+                fecharMenuLateralDropdown();
+            }
+            if (dropdownUsuarioEl?.style.display === 'block' && !dropdownUsuarioEl.contains(e.target) && !botaoPerfilUsuarioEl.contains(e.target)) {
+                botaoPerfilUsuarioEl.setAttribute('aria-expanded', 'false');
+                dropdownUsuarioEl.style.display = 'none';
+                // Se o foco saiu para um lugar inesperado, volta para o botão
+                if (document.activeElement === document.body || document.activeElement === null) botaoPerfilUsuarioEl.focus();
+            }
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                if (overlayModalEl?.classList.contains('active')) { fecharModal(); e.preventDefault(); }
+                else if (menuLateralEl?.classList.contains('visible')) { fecharMenuLateralDropdown(); if (botaoMenuLateralEl) botaoMenuLateralEl.focus(); e.preventDefault(); }
+                else if (dropdownUsuarioEl?.style.display === 'block') { botaoPerfilUsuarioEl.setAttribute('aria-expanded', 'false'); dropdownUsuarioEl.style.display = 'none'; if (botaoPerfilUsuarioEl) botaoPerfilUsuarioEl.focus(); e.preventDefault(); }
+                else if (modoCadastroPinAtivo) { pararRegistroPin(true); e.preventDefault(); }
+            }
+        });
         if (fabAdicionarPinEl) fabAdicionarPinEl.addEventListener('click', iniciarInstrucaoCadastroPin);
-        else { if (estaLogado) console.warn("JS: Botão FAB não encontrado (normal se HTML não renderizou)."); }
+        if (leafletMapInstance) {
+            leafletMapInstance.on('click', e => { if (modoCadastroPinAtivo) tratarCliqueMapaParaRegistro(e); });
+            leafletMapInstance.on('popupopen', e => {
+                // Adiciona listener para fechar popup com Escape
+                const escListenerPopup = ev => {
+                    if (ev.key === 'Escape' && leafletMapInstance.hasLayer(e.popup)) {
+                        leafletMapInstance.closePopup(e.popup);
+                        document.removeEventListener('keydown', escListenerPopup);
+                    }
+                };
+                document.addEventListener('keydown', escListenerPopup);
+                e.popup.on('remove', () => { // Remove listener quando o popup é fechado
+                    document.removeEventListener('keydown', escListenerPopup);
+                });
+            });
+        }
 
-        if(leafletMapInstance) leafletMapInstance.on('click', (e) => { if (modoCadastroPinAtivo) tratarCliqueMapaParaRegistro(e.latlng); });
-        else console.error("JS: Instância do mapa não definida para adicionar evento de clique.")
-  
-        // --- CHAMADAS DE INICIALIZAÇÃO ---
-        // A função abaixo foi removida pois sua lógica principal foi integrada ou não é mais necessária
-        // atualizarInterfaceBaseadoNoLogin(estaLogado); 
-        atualizarConteudoMenuLateral(estaLogado); // Chama para montar a sidebar com o estado de login correto
-        buscarEExibirProblemas();
+        // --- INICIALIZAÇÕES FINAIS ---
+        if (leafletMapInstance) buscarEExibirProblemas(); // Carrega problemas ao iniciar
         inicializarAutocompleteGlobal();
-  
-        console.log("JS: Aplicação pronta.");
-    } // --- Fim de inicializarAplicacao ---
-}); // --- Fim do DOMContentLoaded ---
+        console.log("JS: Lógica da Aplicação e Listeners configurados.");
+
+        adicionarAtalhoTecladoNovoPin();
+
+
+    } // Fim de inicializarLogicaAplicacao
+
+    inicializarMapaEApp();
+});

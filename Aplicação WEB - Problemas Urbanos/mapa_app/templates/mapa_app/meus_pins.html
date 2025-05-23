@@ -1,0 +1,153 @@
+<!-- meus_pins.html !-->
+{% extends 'global/base.html' %}
+  {% load static %}
+
+  {% block title %}Meus Pins Reportados - {{ block.super }}{% endblock %}
+
+  {% block page_specific_css %}
+  <style>
+      .pins-container {
+          max-width: 900px;
+          margin: 2rem auto;
+          padding: 1.5rem;
+          background-color: #fff;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+      .pins-container h1 {
+          color: var(--primary-color-dark, #004488);
+          margin-bottom: 1.5rem;
+          border-bottom: 2px solid var(--primary-color-light, #e6f0ff);
+          padding-bottom: 0.5rem;
+      }
+      .problema-card {
+          border: 1px solid var(--border-color-light, #e9ecef);
+          border-radius: var(--border-radius-medium, 0.375rem);
+          margin-bottom: 1.5rem;
+          padding: 1rem;
+          background-color: var(--background-content, #ffffff);
+          box-shadow: var(--shadow-sm, 0 0.125rem 0.25rem rgba(0,0,0,0.075));
+      }
+      .problema-card h3 {
+          font-size: 1.2em;
+          color: var(--primary-color, #0056b3);
+          margin-top: 0;
+          margin-bottom: 0.5rem;
+      }
+      .problema-card p {
+          font-size: 0.95em;
+          margin-bottom: 0.3rem;
+          color: var(--text-color-medium, #495057);
+      }
+      .problema-card .status {
+          font-weight: bold;
+      }
+      .problema-card .data-reporte {
+          font-size: 0.85em;
+          color: var(--text-color-light, #6c757d);
+          margin-top: 0.5rem;
+      }
+      .no-pins-message {
+          text-align: center;
+          padding: 2rem;
+          color: var(--text-color-medium, #495057);
+          font-style: italic;
+      }
+      .map-link-btn {
+          display: inline-block;
+          margin-top: 1rem;
+          padding: 0.5rem 1rem;
+          background-color: var(--light-blue, #007bff);
+          color: white;
+          text-decoration: none;
+          border-radius: var(--border-radius-medium, 0.375rem);
+          transition: background-color 0.2s;
+      }
+      .map-link-btn:hover {
+          background-color: var(--primary-color-dark, #004488);
+      }
+      .problema-card .problema-meta {
+          font-size: 0.9em;
+          color: #666;
+      }
+      .problema-card .problema-meta strong {
+          color: #333;
+      }
+
+      /* Para usar as cores do status definidas no JS/CSS */
+      .status-pendente { color: var(--warning-color, orange); }
+      .status-em_analise { color: var(--info-color, cyan); }
+      .status-em_andamento { color: var(--info-color, cyan); }
+      .status-solucionado { color: var(--success-color, green); }
+      .status-recusado { color: var(--danger-color, red); }
+
+  </style>
+  {% endblock %}
+
+  {% block content %}
+  <div class="pins-container">
+      <h1>{{ page_title|default:"Meus Problemas Reportados" }}</h1>
+
+      {% if problemas %}
+          {% for problema in problemas %}
+              <div class="problema-card">
+                  <h3>
+                      <i class="fas {{ problema.get_tipo_problema_icone_fa|default:'fa-map-marker-alt' }}" style="color: {{ problema.get_tipo_problema_cor|default:'#777' }}; margin-right: 8px;"></i>
+                      {{ problema.get_tipo_problema_display }}
+                  </h3>
+                  {% if problema.descricao %}
+                      <p>{{ problema.descricao|truncatewords:30 }}</p>
+                  {% endif %}
+                  {% if problema.endereco_texto %}
+                      <p><strong>Local:</strong> {{ problema.endereco_texto }}</p>
+                  {% else %}
+                      <p><strong>Coords:</strong> Lat: {{ problema.latitude }}, Lon: {{ problema.longitude }}</p>
+                  {% endif %}
+                  <p class="problema-meta">
+                      <strong>Status:</strong>
+                      <span class="status status-{{ problema.status }}">{{ problema.get_status_display }}</span>
+                  </p>
+                  <p class="data-reporte">
+                      Reportado em: {{ problema.data_reporte|date:"d/m/Y H:i" }}
+                  </p>
+                  <!-- Você pode adicionar um link para ver o pin no mapa se tiver essa funcionalidade -->
+                  <!-- <a href="{% url 'mapa_app:mapa_interativo' %}?pin_id={{ problema.id }}" class="map-link-btn">Ver no Mapa</a> -->
+              </div>
+          {% endfor %}
+      {% else %}
+          <div class="no-pins-message">
+              <p>Você ainda não reportou nenhum problema.</p>
+              <a href="{% url 'mapa_app:mapa_interativo' %}" class="map-link-btn">Reportar um Problema Agora</a>
+          </div>
+      {% endif %}
+  </div>
+  {% endblock %}
+  ```
+  *   **Melhoria no `models.py` (opcional, mas recomendado):** Para ter o ícone e a cor no template de "Meus Pins" de forma fácil, você pode adicionar métodos ao seu modelo `Problema` em `mapa_app/models.py`:
+
+      ```python
+      # Em mapa_app/models.py, dentro da classe Problema
+
+      # ... (outros campos e métodos) ...
+
+      def get_tipo_problema_info(self):
+          # Reutiliza a lógica que você tem no map.js para os tipos
+          tipos_info = {
+              'lixo': {'iconeFa': 'fa-trash-can', 'cor': '#795548'},
+              'alagamento': {'iconeFa': 'fa-house-flood-water', 'cor': '#2196F3'},
+              'sinalizacao': {'iconeFa': 'fa-traffic-light', 'cor': '#FF9800'},
+              'buraco': {'iconeFa': 'fa-road-circle-xmark', 'cor': '#607D8B'},
+              'congestionamento': {'iconeFa': 'fa-car-burst', 'cor': '#F44336'},
+              'deslizamento': {'iconeFa': 'fa-mountain-sun', 'cor': '#A1887F'},
+              'esgoto': {'iconeFa': 'fa-biohazard', 'cor': '#4CAF50'},
+              'iluminacao': {'iconeFa': 'fa-lightbulb', 'cor': '#FFEB3B'},
+              'violencia': {'iconeFa': 'fa-shield-halved', 'cor': '#E91E63'},
+              'outros': {'iconeFa': 'fa-circle-question', 'cor': '#9E9E9E'}
+          }
+          return tipos_info.get(self.tipo_problema, {'iconeFa': 'fa-question-circle', 'cor': '#9E9E9E'})
+
+      def get_tipo_problema_icone_fa(self):
+          return self.get_tipo_problema_info().get('iconeFa')
+
+      def get_tipo_problema_cor(self):
+          return self.get_tipo_problema_info().get('cor')

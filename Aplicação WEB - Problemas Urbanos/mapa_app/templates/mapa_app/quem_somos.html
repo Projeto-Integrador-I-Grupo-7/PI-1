@@ -1,0 +1,341 @@
+{% extends 'global/base.html' %}
+{% load static %}
+
+{% block title %}Quem Somos - Mapeamento Problemas Urbanos{% endblock %}
+
+{% block page_specific_css %}
+<style>
+    /* Estilos gerais para a página Quem Somos */
+    .quem-somos-page-container { /* Novo container para controle de largura e centralização */
+        width: 100%;
+        margin: 0 auto;    /* Centraliza o container na área do .main-content */
+        padding: 0 20px; /* Adiciona padding lateral */
+        max-width: 1200px; /* Largura máxima para telas grandes */
+        box-sizing: border-box; /* Inclui padding na largura total */
+    }
+
+    /* Seção Hero (Topo) */
+    .quem-somos-hero {
+        background-color: #f8f9fa;
+        padding: 60px 20px; /* Reduzido o padding vertical */
+        text-align: center;
+        border-bottom: 1px solid #e9ecef;
+        margin-bottom: 40px; /* Espaço antes da próxima seção */
+    }
+    .quem-somos-hero h1 {
+        font-size: 2.5rem; /* Ajustado */
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 15px;
+    }
+    .quem-somos-hero p {
+        font-size: 1.15rem; /* Ajustado */
+        color: #555;
+        max-width: 800px;
+        margin: 0 auto 25px auto; /* Centralizado */
+    }
+    .quem-somos-hero .cta-buttons a {
+        margin: 5px 10px; /* Ajustado para melhor responsividade */
+        padding: 12px 25px;
+        font-size: 1rem;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: background-color 0.3s ease;
+        display: inline-block; /* Para que a margem funcione corretamente */
+    }
+    .quem-somos-hero .cta-primary {
+        background-color: var(--primary-color, #007bff); /* Usando variável CSS */
+        color: white;
+    }
+    .quem-somos-hero .cta-primary:hover {
+        background-color: var(--dark-blue, #0056b3); /* Usando variável CSS */
+    }
+    .quem-somos-hero .cta-secondary {
+        background-color: var(--secondary-color, #6c757d); /* Usando variável CSS */
+        color: white;
+    }
+    .quem-somos-hero .cta-secondary:hover {
+        background-color: #545b62;
+    }
+
+    /* Seções de Conteúdo Genéricas */
+    .qs-section {
+        padding: 40px 0; /* Padding vertical, o horizontal vem do .quem-somos-page-container */
+        text-align: center; /* Centraliza texto dentro da seção por padrão */
+        margin-bottom: 40px; /* Espaço entre seções */
+    }
+    .qs-section.bg-light {
+        background-color: #f8f9fa; /* Para seções com fundo claro, se precisar de bordas/padding diferentes */
+        border-radius: 8px; /* Opcional: para destacar seções com fundo */
+        padding: 40px 20px; /* Ajusta padding se tiver fundo */
+    }
+    .qs-section.bg-dark {
+        background-color: #343a40;
+        color: #f8f9fa;
+        border-radius: 8px; /* Opcional */
+        padding: 40px 20px; /* Ajusta padding se tiver fundo */
+    }
+    .qs-section.bg-dark h2, 
+    .qs-section.bg-dark p:not(.team-member p) { /* Evita sobrescrever cor do texto dentro de .team-member */
+        color: #f8f9fa;
+    }
+    .qs-section.bg-dark .qs-icon {
+        color: var(--light-blue, #007bff); 
+    }
+
+    .qs-section h2 {
+        font-size: 2.2rem; /* Ajustado */
+        font-weight: 500;
+        margin-bottom: 30px;
+        color: #333; /* Cor padrão, sobrescrita por .bg-dark se necessário */
+    }
+    .qs-section > p { /* Parágrafos diretos filhos de .qs-section */
+        font-size: 1.1rem;
+        line-height: 1.7;
+        color: #666; /* Cor padrão */
+        max-width: 750px; /* Largura máxima para o parágrafo principal da seção */
+        margin: 0 auto 30px auto; /* Centralizado e com margem inferior */
+        text-align: justify; /* Justifica o texto principal da seção para melhor leitura */
+    }
+    .qs-section > p:last-child {
+        margin-bottom: 0; /* Remove margem inferior do último parágrafo da seção */
+    }
+
+
+    /* Colunas (para Missão, Como Funciona) */
+    .qs-columns {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center; /* Centraliza as colunas */
+        gap: 30px;
+        margin-top: 30px;
+    }
+    .qs-column {
+        flex: 1 1 280px; /* Flex-basis menor para melhor encaixe */
+        max-width: 320px;
+        padding: 25px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        text-align: left; /* Texto dentro das colunas alinhado à esquerda por padrão */
+    }
+    .qs-column h3 {
+        font-size: 1.4rem; /* Ajustado */
+        color: var(--primary-color, #007bff);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+    .qs-column p { /* Parágrafos dentro das colunas */
+        font-size: 1rem; /* Ajustado */
+        line-height: 1.6;
+        color: #555; /* Cor para parágrafos dentro das colunas */
+    }
+    .qs-icon {
+        font-size: 1.8rem; /* Ajustado */
+        margin-right: 12px;
+        color: var(--primary-color, #007bff);
+        width: 30px; 
+        text-align: center;
+    }
+
+    /* Estilos para colunas dentro de seções escuras */
+    .bg-dark .qs-column {
+        background-color: #495057;
+        color: #f1f1f1;
+    }
+    .bg-dark .qs-column h3 {
+        color: #fff;
+    }
+    .bg-dark .qs-column p {
+        color: #ced4da;
+    }
+    .bg-dark .qs-column .qs-icon {
+        color: var(--lighter-blue, #17a2b8);
+    }
+
+    /* Seção da Equipe */
+    .team-section { /* Herda de .qs-section, então já tem padding e text-align: center */
+        /* padding: 60px 20px; */ /* Já definido em .qs-section */
+        /* text-align: center; */ /* Já definido em .qs-section */
+    }
+    .team-section h2 {
+        /* font-size: 2.5rem; */ /* Já definido em .qs-section h2 */
+        /* margin-bottom: 40px; */ /* Já definido em .qs-section h2 */
+    }
+    .team-grid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 25px; /* Ajustado */
+    }
+    .team-member {
+        background-color: #fff;
+        border: 1px solid #e0e0e0; /* Borda mais suave */
+        border-radius: 8px;
+        padding: 20px;
+        width: 100%; /* Ocupa a largura do grid item */
+        max-width: 220px; /* Largura máxima do card do membro */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.07);
+        text-align: center; /* Centraliza conteúdo do card */
+    }
+    .team-member img {
+        width: 90px; /* Ajustado */
+        height: 90px; /* Ajustado */
+        border-radius: 50%;
+        margin-bottom: 15px;
+        object-fit: cover;
+        border: 3px solid var(--border-color, #ddd); /* Borda na imagem */
+    }
+    .team-member h4 {
+        font-size: 1.15rem; /* Ajustado */
+        margin-bottom: 5px;
+        color: #333;
+    }
+    .team-member p { /* Parágrafo de contribuição/RA */
+        font-size: 0.9rem;
+        color: #777;
+        line-height: 1.4; /* Ajustado */
+    }
+
+    /* Centralização do login-prompt na página Quem Somos */
+    .login-prompt {
+        text-align:center;
+        margin-top:40px; /* Aumentado espaço */
+        padding-top:30px; /* Aumentado espaço */
+        border-top: 1px solid #e0e0e0; /* Borda mais suave */
+    }
+    .login-prompt p {
+        margin-bottom: 20px; /* Espaço antes dos botões */
+        font-size: 1.1rem;
+        color: #444;
+    }
+    /* Reutilizando .login-btn do style_index.css se definido lá,
+       ou defina estilos para .cta-mapa-link aqui se precisar de algo diferente.
+       O .cta-mapa-link já está estilizado na seção .quem-somos-hero,
+       podemos torná-lo mais genérico ou duplicar/ajustar.
+       Para consistência, vamos usar .cta-primary e .cta-secondary também.
+    */
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="quem-somos-page-container"> {# Adicionado este container para controle de largura #}
+
+    <section class="quem-somos-hero">
+        <h1>Sobre o Projeto Mapeamento Urbano Osasco</h1>
+        <p>Uma iniciativa colaborativa para identificar, documentar e buscar soluções para os desafios urbanos da nossa cidade, unindo cidadãos, tecnologia e gestão pública.</p>
+        {% if not user.is_authenticated %}
+        <div class="cta-buttons">
+            <a href="{% url 'login' %}?next={% url 'mapa_app:mapa_interativo' %}" class="cta-primary">Acessar Mapa (Requer Login)</a>
+            <a href="{% url 'mapa_app:signup' %}" class="cta-secondary">Criar Conta</a>
+        </div>
+        {% else %}
+        <p>Bem-vindo(a) de volta, <strong>{{ user.username }}</strong>!</p>
+        <div class="cta-buttons">
+            <a href="{% url 'mapa_app:mapa_interativo' %}" class="cta-primary">Ir para o Mapa</a>
+        </div>
+        {% endif %}
+    </section>
+
+    <section class="qs-section">
+        <h2>Nossa Missão</h2>
+        <p>Empoderar os cidadãos de Osasco com uma ferramenta transparente e eficiente para reportar problemas urbanos, facilitando a comunicação com os órgãos responsáveis e promovendo uma cidade mais participativa e bem cuidada.</p>
+        <div class="qs-columns">
+            <div class="qs-column">
+                <h3><i class="fas fa-bullseye qs-icon"></i>Foco no Cidadão</h3>
+                <p>Colocamos o cidadão no centro do processo, tornando sua voz ativa na melhoria da infraestrutura e serviços da cidade.</p>
+            </div>
+            <div class="qs-column">
+                <h3><i class="fas fa-lightbulb qs-icon"></i>Inovação e Tecnologia</h3>
+                <p>Utilizamos a tecnologia de geolocalização e mapeamento para criar uma plataforma intuitiva e acessível a todos.</p>
+            </div>
+            <div class="qs-column">
+                <h3><i class="fas fa-hands-helping qs-icon"></i>Colaboração</h3>
+                <p>Acreditamos que a união de esforços entre comunidade e poder público é fundamental para construir uma cidade melhor.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="qs-section bg-dark">
+        <h2>Como Funciona?</h2>
+    <p style="text-align: center; max-width: 750px; margin-left: auto; margin-right: auto; margin-bottom: 30px;">Nossa plataforma é simples e direta. Veja os passos para contribuir:</p>        <div class="qs-columns">
+            <div class="qs-column">
+                <h3><i class="fas fa-user-plus qs-icon"></i>1. Cadastre-se</h3>
+                <p>Crie sua conta gratuitamente para começar a reportar problemas e interagir com a comunidade.</p>
+            </div>
+            <div class="qs-column">
+                <h3><i class="fas fa-map-marker-alt qs-icon"></i>2. Mapeie o Problema</h3>
+                <p>Navegue pelo mapa, encontre a localização exata do problema e adicione um "pin" com detalhes e fotos.</p>
+            </div>
+            <div class="qs-column">
+                <h3><i class="fas fa-share-alt qs-icon"></i>3. Acompanhe e Compartilhe</h3>
+                <p>Siga o status dos problemas reportados e compartilhe para aumentar a visibilidade.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="qs-section team-section">
+        <h2>Nossa Equipe (Grupo 7 - Projeto Integrador UNIVESP)</h2>
+        <!-- <p>Este projeto é fruto do trabalho dedicado dos alunos do Grupo 7 do Projeto Integrador da Univesp.</p> -->
+        <div class="team-grid">
+            <div class="team-member">
+                 <img src="{% static 'global/images/avatar_placeholder.png' %}" alt="Carlos"> 
+                <h4>Carlos A. N. Sousa</h4>
+                <p>RA: 2214613</p>
+            </div>
+            <div class="team-member">
+                 <img src="{% static 'global/images/avatar_placeholder.png' %}" alt="Daniel"> 
+                <h4>Daniel H. S. L. Junior</h4>
+                <p>RA: 23215713</p>
+            </div>
+            <div class="team-member">
+                 <img src="{% static 'global/images/avatar_placeholder.png' %}" alt="Deryk"> 
+                <h4>Deryk F. Hamano</h4>
+                <p>RA: 23212460</p>
+            </div>
+            <div class="team-member">
+              <img src="{% static 'global/images/avatar_placeholder.png' %}" alt="Felipe"> 
+                <h4>Felipe R. Santos</h4>
+                <p>RA: 23203460</p>
+            </div>
+            <div class="team-member">
+                 <img src="{% static 'global/images/avatar_placeholder.png' %}" alt="Givaldo">
+                <h4>Givaldo G. Santos</h4>
+                <p>RA: 2209008</p>
+            </div>
+            <div class="team-member">
+                <img src="{% static 'global/images/avatar_placeholder.png' %}" alt="José">
+                <h4>José L. S. Bergamasco</h4>
+                <p>RA: 2221550</p>
+            </div>
+             <div class="team-member">
+                <img src="{% static 'global/images/avatar_placeholder.png' %}" alt="Nagela">
+                <h4>Nagela M. Souza</h4>
+                <p>RA: 23226879</p>
+            </div>
+
+        </div>
+    </h1>
+    <p style="text-align:center">Agradecemos à UNIVESP e nossa orientadora, Josiane Paula Etelvino, pela oportunidade e orientação durante o desenvolvimento deste projeto.</p></h1>
+
+    </section>
+    
+
+    {# Adicionando os botões de login/cadastro na parte inferior se o usuário não estiver logado #}
+    {% if not user.is_authenticated %}
+    <section class="qs-section login-prompt" style="border-top: 1px solid #e9ecef; padding-top: 30px; margin-top: 40px;">
+        <p>Pronto para começar a mapear?</p>
+        <div class="cta-buttons">
+            <a href="{% url 'login' %}?next={% url 'mapa_app:mapa_interativo' %}" class="cta-primary">Acessar Plataforma</a>
+        </div>
+    </section>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block page_specific_scripts %}
+{# Nenhum script específico para esta página por enquanto #}
+{% endblock %}

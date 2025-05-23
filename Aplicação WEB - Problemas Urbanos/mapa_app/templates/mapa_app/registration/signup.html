@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'global/base.html' %}
 {% load static %}
 
 {% block title %}Criar Nova Conta - Mapeamento Problemas Urbanos{% endblock %}
@@ -7,14 +7,20 @@
     {# Você pode mover estes estilos para um arquivo CSS separado depois, se preferir #}
     <style>
         .auth-container {
-            max-width: 500px;
-            margin: 40px auto;
-            padding: 30px;
-            max-height: 90vh;          /* altura máxima de 90% da tela */
-            overflow-y: auto;          /* ativa rolagem vertical se necessário */
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    max-width: 30rem; /* Equivalente a 480px se 1rem = 16px */
+    width: 90%; /* Para telas menores que max-width, adiciona um respiro lateral */
+    margin: 2.5rem auto; /* 40px para cima/baixo, centralizado horizontalmente */
+    padding: 1.875rem; /* 30px */
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    
+    overflow-y: auto;   /* Habilita rolagem vertical se o conteúdo exceder a max-height */
+    max-height: 70vh;   /* Exemplo: O container não passará de 75% da altura da tela. */
+                        /* Ajuste 75vh para 70vh, 80vh, etc., conforme o visual desejado. */
+    
+    display: flex;      /* Para melhor organização interna se o conteúdo dentro precisar */
+    flex-direction: column;
 }
 
             

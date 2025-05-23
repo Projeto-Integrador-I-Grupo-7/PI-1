@@ -31,14 +31,13 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin.apps.SimpleAdminConfig',
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'contact',
-    'mapa_app.apps.MapaAppConfig',
+    'mapa_app',
 ]
 
 MIDDLEWARE = [
@@ -53,9 +52,9 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'project.urls'
 
-LOGIN_URL = 'login'  # Nome da URL para a qual o usuário será redirecionado se não estiver logado
-LOGIN_REDIRECT_URL = 'contact/solicitar' # Nome da URL para onde o usuário vai após o login bem-sucedido
-LOGOUT_REDIRECT_URL = 'index' # Para onde o usuário vai após o logout (opcional, pode ser 'login' também)
+LOGIN_URL = 'login' # Continua o mesmo
+LOGIN_REDIRECT_URL = 'mapa_app:mapa_interativo' # Após login, vai para o MAPA
+LOGOUT_REDIRECT_URL = 'mapa_app:quem_somos'  # Após logout, vai para a PÁGINA QUEM SOMOS (raiz)
 
 
 
@@ -114,11 +113,13 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pt-br'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
+
+USE_L10N = True
 
 USE_TZ = True
 

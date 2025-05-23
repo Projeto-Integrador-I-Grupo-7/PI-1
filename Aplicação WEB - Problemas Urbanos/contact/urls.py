@@ -10,7 +10,7 @@ urlpatterns = [
     path('contact/mapa/', views.mapa, name='mapa'),  
     path('login/contact/solicitar/', views.solicitar, name='solicitar'),
     path('contact/sucesso/', views.pagina_sucesso, name='pagina_sucesso'),
-    path('login/contact/cadastro/', views.cadastro, name='cadastro'),
+    path('login/contact/cadastro/', views.cadastro, name='cadastro')
 
     # path("myadmin/", admin_site.urls)
 ]
