@@ -1,4 +1,4 @@
-// Arquivo: base_static/global/js/map.js (ou onde estiver seu map.js)
+// Arquivo: base_static/global/js/map.js
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("MAP.JS: DOMContentLoaded disparado.");
