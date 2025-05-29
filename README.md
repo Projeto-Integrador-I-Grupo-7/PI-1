@@ -16,25 +16,7 @@
 
 <br>
 
-3 - Iniciando um projeto com nome (Mapeamanto Urbano Osasco).
-
-- django-admin startproject mapeamento_urbano_osasco
-
-<br>
-
-4 - Testando o projeto na sua máquina local. 
-
-- Você pode clicar no link disponibilizado, depois do "start" do projeto, exemplo do link: "http://127.0.0.1:8000/"
-
-<br>
-
-5 - Criar uma App, para isso é necessário estar dentro da página do Projeto
-
-- python manage.py startapp "mapeando_problemas_urbanos"
-
-<br>
-
-6 - Em Breve continua!
+3 - Em Breve...
 
 
 <br>
