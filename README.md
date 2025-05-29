@@ -1,4 +1,4 @@
-# Backend (Python & Django)
+# Front & Back-End
 
 <br>
 <h2 align=center> Passos para a Criação do Backend </h2>
